@@ -119,8 +119,8 @@ Mediator.prototype.confirmClassDeletion = function (clazz) {
 }
 
 Mediator.prototype.deletedClass = function (clazz) {
-    this.olcModelerHook.modeler.deleteOlc(clazz);
     this.fragmentModelerHook.modeler.handleClassDeleted(clazz);
+    this.olcModelerHook.modeler.deleteOlc(clazz);
 }
 
 Mediator.prototype.renamedClass = function (clazz) {
