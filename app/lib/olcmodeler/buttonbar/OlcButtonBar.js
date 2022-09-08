@@ -57,7 +57,7 @@ export default function OlcButtonBar(canvas, eventBus, olcModeler) {
     });
     selectOlcComponent.addEventListener('dblclick', event => {
         if (selectOlcComponent.value && (event.target === selectOlcComponent || event.target === selectedOlcSpan)) {
-            hideSelectOlcMenu();
+            selectOlcMenu.hide();
             var renameOlcInput = document.createElement('input');
             renameOlcInput.value = selectOlcComponent.value.classRef.name;
             renameOlcInput.addEventListener("change", function (event) {
@@ -104,7 +104,7 @@ export default function OlcButtonBar(canvas, eventBus, olcModeler) {
         var valueBefore = selectOlcComponent.value;
         selectOlcMenu.populate(olcs, olc => {
             olcModeler.showOlc(olc);
-            hideSelectOlcMenu();
+            selectOlcMenu.hide();
         });
         selectOlcMenu.addCreateElementInput(event => {
             var className = selectOlcMenu.getInputValue();
@@ -126,6 +126,7 @@ export default function OlcButtonBar(canvas, eventBus, olcModeler) {
             closeOverlay(event);
             event.preventDefault();
         });
+        selectOlcMenu.hide = closeOverlay;
     }
 
 
