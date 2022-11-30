@@ -50,7 +50,10 @@ var dataModeler = new DataModelModeler({
 });
 
 var objectModeler = new DataModelModeler({
-        container: '#objectmodel-canvas',
+    container: '#objectmodel-canvas',
+    keyboard: {
+        bindTo: document.querySelector('#objectmodel-canvas')
+    },
     }
 );
 
