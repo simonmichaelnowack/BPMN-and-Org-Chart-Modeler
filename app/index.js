@@ -2,6 +2,7 @@ import FragmentModeler from './lib/fragmentmodeler/FragmentModeler';
 import diagramXML from '../resources/newDiagram.bpmn';
 import datamodelXML from '../resources/sampleBoard.bpmn';
 import newDatamodel from '../resources/emptyBoard.bpmn';
+import newObjectmodel from '../resources/emptyBoard.bpmn';
 import OlcModeler from './lib/olcmodeler/OlcModeler';
 import GoalStateModeler from './lib/goalstatemodeler/GoalStateModeler';
 import DataModelModeler from './lib/datamodelmodeler/Modeler';
@@ -48,6 +49,11 @@ var dataModeler = new DataModelModeler({
     }]
 });
 
+var objectModeler = new DataModelModeler({
+        container: '#objectmodel-canvas',
+    }
+);
+
 var fragmentModeler = new FragmentModeler({
     container: '#fragments-canvas',
     keyboard: { bindTo: document.querySelector('#fragments-canvas') },
@@ -83,6 +89,7 @@ async function createNewDiagram() {
       await fragmentModeler.importXML(diagramXML);
       await olcModeler.createNew();
       await dataModeler.importXML(newDatamodel);
+      await objectModeler.importXML(newObjectmodel);
       goalStateModeler.createNew();
       if (LOAD_DUMMY) {
         await loadDebugData();
