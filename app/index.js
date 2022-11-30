@@ -125,6 +125,8 @@ async function exportToZip () {
   zip.file('fragments.bpmn', fragments);
   const dataModel = (await dataModeler.saveXML({ format: true })).xml;
   zip.file('dataModel.xml', dataModel);
+  const objectModel = (await objectModeler.saveXML({ format: true })).xml;
+  zip.file('objectModel.xml', objectModel);
   const olcs = (await olcModeler.saveXML({ format: true })).xml;
   zip.file('olcs.xml', olcs);
   const goalState = (await goalStateModeler.saveXML({ format: true })).xml;
@@ -136,10 +138,11 @@ async function importFromZip (zipData) {
   checker.deactivate();
   const zip = await Zip.loadAsync(zipData, {base64 : true});
   const files = {
-    fragments: zip.file('fragments.bpmn'),
-    dataModel: zip.file('dataModel.xml'),
-    olcs: zip.file('olcs.xml'),
-    goalState: zip.file('goalState.xml')
+      fragments: zip.file('fragments.bpmn'),
+      dataModel: zip.file('dataModel.xml'),
+      objectModel: zip.file('objectModel.xml'),
+      olcs: zip.file('olcs.xml'),
+      goalState: zip.file('goalState.xml')
   };
   Object.keys(files).forEach(key => {
     if (!files[key]) {
@@ -147,6 +150,7 @@ async function importFromZip (zipData) {
     }
   });
   await dataModeler.importXML(await files.dataModel.async("string"));
+  await objectModeler.importXML(await files.objectModel.async("string"));
   await olcModeler.importXML(await files.olcs.async("string"));
   await fragmentModeler.importXML(await files.fragments.async("string"));
   await goalStateModeler.importXML(await files.goalState.async("string"));
