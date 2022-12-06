@@ -6,6 +6,7 @@ import newObjectmodel from '../resources/emptyBoard.bpmn';
 import OlcModeler from './lib/olcmodeler/OlcModeler';
 import GoalStateModeler from './lib/goalstatemodeler/GoalStateModeler';
 import DataModelModeler from './lib/datamodelmodeler/Modeler';
+import ObjectModelModeler from './lib/objectdiagrammodeler/Modeler';
 
 import $ from 'jquery';
 import Mediator from './lib/mediator/Mediator';
@@ -49,7 +50,7 @@ var dataModeler = new DataModelModeler({
     }]
 });
 
-var objectModeler = new DataModelModeler({
+var objectModeler = new ObjectModelModeler({
     container: '#objectmodel-canvas',
     keyboard: {
         bindTo: document.querySelector('#objectmodel-canvas')
