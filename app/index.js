@@ -2,9 +2,11 @@ import FragmentModeler from './lib/fragmentmodeler/FragmentModeler';
 import diagramXML from '../resources/newDiagram.bpmn';
 import datamodelXML from '../resources/sampleBoard.bpmn';
 import newDatamodel from '../resources/emptyBoard.bpmn';
+import newObjectmodel from '../resources/emptyBoard.bpmn';
 import OlcModeler from './lib/olcmodeler/OlcModeler';
 import GoalStateModeler from './lib/goalstatemodeler/GoalStateModeler';
 import DataModelModeler from './lib/datamodelmodeler/Modeler';
+import ObjectModelModeler from './lib/objectmodelmodeler/Modeler';
 
 import $ from 'jquery';
 import Mediator from './lib/mediator/Mediator';
@@ -48,6 +50,14 @@ var dataModeler = new DataModelModeler({
     }]
 });
 
+var objectModeler = new ObjectModelModeler({
+    container: '#objectmodel-canvas',
+    keyboard: {
+        bindTo: document.querySelector('#objectmodel-canvas')
+    },
+    }
+);
+
 var fragmentModeler = new FragmentModeler({
     container: '#fragments-canvas',
     keyboard: { bindTo: document.querySelector('#fragments-canvas') },
@@ -83,6 +93,7 @@ async function createNewDiagram() {
       await fragmentModeler.importXML(diagramXML);
       await olcModeler.createNew();
       await dataModeler.importXML(newDatamodel);
+      await objectModeler.importXML(newObjectmodel);
       goalStateModeler.createNew();
       if (LOAD_DUMMY) {
         await loadDebugData();
@@ -115,6 +126,8 @@ async function exportToZip () {
   zip.file('fragments.bpmn', fragments);
   const dataModel = (await dataModeler.saveXML({ format: true })).xml;
   zip.file('dataModel.xml', dataModel);
+  const objectModel = (await objectModeler.saveXML({ format: true })).xml;
+  zip.file('objectModel.xml', objectModel);
   const olcs = (await olcModeler.saveXML({ format: true })).xml;
   zip.file('olcs.xml', olcs);
   const goalState = (await goalStateModeler.saveXML({ format: true })).xml;
@@ -126,10 +139,11 @@ async function importFromZip (zipData) {
   checker.deactivate();
   const zip = await Zip.loadAsync(zipData, {base64 : true});
   const files = {
-    fragments: zip.file('fragments.bpmn'),
-    dataModel: zip.file('dataModel.xml'),
-    olcs: zip.file('olcs.xml'),
-    goalState: zip.file('goalState.xml')
+      fragments: zip.file('fragments.bpmn'),
+      dataModel: zip.file('dataModel.xml'),
+      objectModel: zip.file('objectModel.xml'),
+      olcs: zip.file('olcs.xml'),
+      goalState: zip.file('goalState.xml')
   };
   Object.keys(files).forEach(key => {
     if (!files[key]) {
@@ -137,6 +151,7 @@ async function importFromZip (zipData) {
     }
   });
   await dataModeler.importXML(await files.dataModel.async("string"));
+  await objectModeler.importXML(await files.objectModel.async("string"));
   await olcModeler.importXML(await files.olcs.async("string"));
   await fragmentModeler.importXML(await files.fragments.async("string"));
   await goalStateModeler.importXML(await files.goalState.async("string"));
