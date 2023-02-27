@@ -1,4 +1,5 @@
 import inherits from 'inherits';
+import {findIndex } from 'min-dash'
 
 import BaseModeler from './BaseModeler';
 
@@ -31,13 +32,15 @@ import ResizeModule from 'diagram-js/lib/features/resize';
 import SpaceToolBehaviorModule from './behavior';
 import SnappingModule from './features/snapping';
 import { nextPosition } from '../util/Util';
+import GmButtonBarModule from './buttonbar';
+
 
 var initialDiagram =
   `<?xml version="1.0" encoding="UTF-8"?>
 <od:definitions xmlns:od="http://tk/schema/od" xmlns:odDi="http://tk/schema/odDi">
-    <od:odBoard id="Board_debug" />
-    <odDi:odRootBoard id="RootBoard_debug">
-        <odDi:odPlane id="Plane_debug" boardElement="Board_debug" />
+    <od:odBoard id="Board" />
+    <odDi:odRootBoard id="RootBoard" name="Objective 1">
+        <odDi:odPlane id="Plane" boardElement="Board" />
     </odDi:odRootBoard>
 </od:definitions>`;
 
@@ -74,6 +77,8 @@ Modeler.NavigatedViewer = NavigatedViewer;
  *
  */
 Modeler.prototype.createDiagram = function() {
+  const container = this.get('canvas').getContainer();
+  container.style.visibility = 'hidden';
   return this.importXML(initialDiagram);
 };
 
@@ -81,6 +86,7 @@ Modeler.prototype.createDiagram = function() {
 Modeler.prototype._interactionModules = [
 
   // non-modeling components
+  GmButtonBarModule,
   KeyboardMoveModule,
   MoveCanvasModule,
   TouchModule,
@@ -130,9 +136,9 @@ Modeler.prototype.createObject = function (name) {
   const canvas = this.get('canvas');
   const diagramRoot = canvas.getRootElement();
 
-  const {x,y} = nextPosition(this, 'od:Object');
+  const {x,y} = nextPosition(this, 'gm:Object');
   const shape = modeling.createShape({
-    type: 'od:Object',
+    type: 'gm:Object',
     name: name
   }, {x,y}, diagramRoot);
   return shape.businessObject;
@@ -148,4 +154,43 @@ Modeler.prototype.deleteObject = function (object) {
 
 Modeler.prototype.updateProperty = function (object, property) {
   this.get('modeling').updateProperties(object, property);
+}
+
+Modeler.prototype.getObjectives = function() {
+  return this._definitions.get('rootBoards');
+}
+
+Modeler.prototype.showObjective = function (objective) {
+  const container = this.get('canvas').getContainer();
+  this._objective = objective;
+  this.clear();
+  if (objective) {
+    container.style.visibility = '';
+    this.open(objective);
+  } else {
+    container.style.visibility = 'hidden';
+  }
+}
+
+Modeler.prototype.getCurrentObjective = function () {
+  return this._objective;
+}
+Modeler.prototype.addObjective = function (name) {
+  var rootBoard = this.get('elementFactory').createRootBoard(name || '<TBD>');
+  this._definitions.get('rootBoards').push(rootBoard[0]);
+  this._definitions.get('rootElements').push(rootBoard[1]);
+  this.showObjective(rootBoard[0]);
+}
+Modeler.prototype.deleteObjective = function (objective) {
+
+  var currentIndex = findIndex(this._definitions.get('rootElements'), objective.plane.boardElement);
+  this._definitions.get('rootElements').splice(currentIndex,1);
+
+  currentIndex = findIndex(this._definitions.get('rootBoards'), objective);
+  var indexAfterRemoval = Math.min(currentIndex, this._definitions.get('rootBoards').length - 2);
+  this._definitions.get('rootBoards').splice(currentIndex,1);
+
+  if (this.getCurrentObjective() === objective) {
+    this.showObjective(this._definitions.get('rootBoards')[indexAfterRemoval]);
+  }
 }
