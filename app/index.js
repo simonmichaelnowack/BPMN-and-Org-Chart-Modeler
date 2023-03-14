@@ -1,10 +1,11 @@
 import FragmentModeler from './lib/fragmentmodeler/FragmentModeler';
 import diagramXML from '../resources/newDiagram.bpmn';
 import newDatamodel from '../resources/emptyBoard.bpmn';
+import newObjectivemodel from '../resources/emptyBoard.bpmn';
 import OlcModeler from './lib/olcmodeler/OlcModeler';
 import GoalStateModeler from './lib/goalstatemodeler/GoalStateModeler';
 import DataModelModeler from './lib/datamodelmodeler/Modeler';
-import GoalModeler from './lib/goalmodeler/Modeler';
+import ObjectiveModeler from './lib/objectivemodeler/Modeler';
 import DependencyModeler from './lib/dependencymodeler/DependencyModeler';
 
 import $ from 'jquery';
@@ -51,6 +52,19 @@ var dependencyModeler = new DependencyModeler({
      */
 });
 
+var dependencyModeler = new DependencyModeler({
+    container: document.querySelector('#dependencymodel-canvas'),
+    keyboard: {
+        bindTo: document.querySelector('#dependencymodel-canvas')
+    },
+    /*
+    additionalModules: [{
+        __init__ : ['mediator'],
+        mediator : ['type', mediator.DependencyModelerHook]
+    }]
+     */
+});
+
 var dataModeler = new DataModelModeler({
     container: '#datamodel-canvas',
     keyboard: {
@@ -62,14 +76,14 @@ var dataModeler = new DataModelModeler({
     }]
 });
 
-var goalModeler = new GoalModeler({
-    container: '#goalmodel-canvas',
+var objectiveModeler = new ObjectiveModeler({
+    container: '#objectivemodel-canvas',
     keyboard: {
-        bindTo: document.querySelector('#goalmodel-canvas')
+        bindTo: document.querySelector('#objectivemodel-canvas')
     },
     additionalModules: [{
         __init__ : ['mediator'],
-        mediator : ['type', mediator.GoalModelerHook]
+        mediator : ['type', mediator.ObjectiveModelerHook]
     }]
 });
 
@@ -108,7 +122,8 @@ async function createNewDiagram() {
       await fragmentModeler.importXML(diagramXML);
       await olcModeler.createNew();
       await dataModeler.importXML(newDatamodel);
-      await goalModeler.createDiagram();
+      await objectiveModeler.createDiagram();
+      await dependencyModeler.createNew();
       await dependencyModeler.createNew();
       goalStateModeler.createNew();
       if (LOAD_DUMMY) {
@@ -142,8 +157,8 @@ async function exportToZip () {
   zip.file('fragments.bpmn', fragments);
   const dataModel = (await dataModeler.saveXML({ format: true })).xml;
   zip.file('dataModel.xml', dataModel);
-  const goalModel = (await goalModeler.saveXML({ format: true })).xml;
-  zip.file('goalModel.xml', goalModel);
+  const objectiveModel = (await objectiveModeler.saveXML({ format: true })).xml;
+  zip.file('objectiveModel.xml', objectiveModel);
   const olcs = (await olcModeler.saveXML({ format: true })).xml;
   zip.file('olcs.xml', olcs);
   const goalState = (await goalStateModeler.saveXML({ format: true })).xml;
@@ -159,7 +174,7 @@ async function importFromZip (zipData) {
   const files = {
       fragments: zip.file('fragments.bpmn'),
       dataModel: zip.file('dataModel.xml'),
-      goalModel: zip.file('goalModel.xml'),
+      objectiveModel: zip.file('objectiveModel.xml'),
       olcs: zip.file('olcs.xml'),
       goalState: zip.file('goalState.xml'),
       dependencyModel: zip.file('dependencyModel.xml')
@@ -170,7 +185,7 @@ async function importFromZip (zipData) {
     }
   });
   await dataModeler.importXML(await files.dataModel.async("string"));
-  await goalModeler.importXML(await files.goalModel.async("string"));
+  await objectiveModeler.importXML(await files.objectiveModel.async("string"));
   await olcModeler.importXML(await files.olcs.async("string"));
   await fragmentModeler.importXML(await files.fragments.async("string"));
   await goalStateModeler.importXML(await files.goalState.async("string"));
