@@ -209,12 +209,18 @@ OmModeler.prototype.deleteObjective = function (objectiveReference) {
   }
 }
 
+OmModeler.prototype.renameObjective = function (objectiveReference, name) {
+    var objective = this.getObjectiveByReference(objectiveReference);
+    objective.name = name;
+    this._emit(ObjectiveEvents.DEFINITIONS_CHANGED, {definitions: this._definitions});
+}
+
 OmModeler.prototype.handleOlcListChanged = function (olcs, dryRun = false) {
     this._olcs = olcs;
 }
 
 OmModeler.prototype.handleStateRenamed = function (olcState) {
-    this.getObjectsInState(olcState).forEach((element, gfx) =>
+    this.getVisualsInState(olcState).forEach(element =>
         this.get('eventBus').fire('element.changed', {
             element
         })
@@ -222,56 +228,78 @@ OmModeler.prototype.handleStateRenamed = function (olcState) {
 }
 
 OmModeler.prototype.handleStateDeleted = function (olcState) {
-    this.getObjectsInState(olcState).forEach((element, gfx) => {
-        element.businessObject.state = undefined;
-        this.get('eventBus').fire('element.changed', {
-            element
-        });
+    let changedVisual = this.getVisualsInState(olcState);
+    this.getObjectsInState(olcState).forEach(element => {
+        element.state = undefined;
     });
-}
-
-OmModeler.prototype.handleClassRenamed = function (clazz) {
-    this.getObjectsOfClass(clazz).forEach((element, gfx) =>
+    changedVisual.forEach(element =>
         this.get('eventBus').fire('element.changed', {
             element
         })
     );
 }
 
+OmModeler.prototype.handleClassRenamed = function (clazz) {
+    this.getVisualsOfClass(clazz).forEach(element => {
+        this.get('eventBus').fire('element.changed', {
+            element
+        })
+    });
+}
+
 OmModeler.prototype.handleClassDeleted = function (clazz) {
-    this.getObjectsOfClass(clazz).forEach((element, gfx) =>
-        this.get('modeling').removeElements([element])
+    let objectives = this._definitions.get('rootElements');
+    objectives.forEach(objective => {
+        let objects = objective.get('boardElements');
+        for (var i = 0; i < objects.length; i++) {
+            if (is(objects[i], 'om:Object') && objects[i].classRef === clazz) {
+                objects.splice(i, 1);
+                i--;
+            }
+        }
+    })
+    this.showObjective(this.getCurrentObjective());
+    // This is needed to update the visual representation of the objective that is currently loaded.
+    // This may need to be adapted once the error of links between deleted objects is resolved
+}
+
+OmModeler.prototype.getVisualsInState = function (olcState) {
+    return this.get('elementRegistry').filter(element =>
+        element.businessObject.state?.id === olcState.id
     );
 }
 
 OmModeler.prototype.getObjectsInState = function (olcState) {
-    return this.get('elementRegistry').filter((element, gfx) =>
+    let objectives = this.get('rootElements');
+    let objects = objectives.map(objective => objective.get('boardElements')).flat(1).filter((element) =>
         is(element, 'om:Object') &&
-        element.businessObject.state === olcState
-    );
+        olcState.id &&
+        element.state?.id === olcState.id);
+    return objects;
 }
 
-OmModeler.prototype.getObjectsOfClass = function (clazz) {
-    return this.get('elementRegistry').filter((element, gfx) =>
-        is(element, 'om:Object') &&
-        clazz.id &&
+OmModeler.prototype.getVisualsOfClass = function (clazz) {
+    return this.get('elementRegistry').filter(element =>
         element.businessObject.classRef?.id === clazz.id
     );
 }
 
+OmModeler.prototype.getObjectsOfClass = function (clazz) {
+    let objectives = this._definitions.get('rootElements');
+    let objects = objectives.map(objective => objective.get('boardElements')).flat(1).filter((element) =>
+        is(element, 'om:Object') &&
+        clazz.id &&
+        element.classRef?.id === clazz.id);
+    return objects;
+}
+
 OmModeler.prototype.getObjectInstancesOfClass = function (clazz) {
     let instances = this._definitions.get('objectInstances');
-    return instances.filter((instance, gfx) =>
+    return instances.filter(instance =>
         is(instance, 'om:ObjectInstance') &&
         clazz.id &&
         instance.classRef?.id === clazz.id
     );
-}
-
-OmModeler.prototype.renameObjective = function (objectiveReference, name) {
-    var objective = this.getObjectiveByReference(objectiveReference);
-    objective.name = name;
-    this._emit(ObjectiveEvents.DEFINITIONS_CHANGED, {definitions: this._definitions});
 }
 
 OmModeler.prototype.getObjectiveByReference = function(objectiveReference) {
@@ -282,3 +310,4 @@ OmModeler.prototype.getObjectiveByReference = function(objectiveReference) {
         return objective;
     }
 }
+
