@@ -59,9 +59,6 @@ export default function Mediator() {
         return this.createState(event.name, event.olc);
     });
 
-    this.on(CommonEvents.NAME_CREATION_REQUESTED, event => {
-        return this.createName(event.name, event.clazz);
-    });
 }
 
 Mediator.prototype.getHooks = function () {
@@ -192,12 +189,12 @@ Mediator.prototype.objectiveDeletionRequested = function (objective) {
 }
 
 Mediator.prototype.objectiveRenamingRequested = function (objective, objectiveName) {
-    this.dependencyModelerHook.modeler.renameObjective(objective, objectiveName)
+    this.dependencyModelerHook.modeler.renameObjective(objective, objectiveName);
 }
 
-Mediator.prototype.createName = function (name, clazz) {
-    const instanceName = this.objectiveModelerHook.modeler.createName(name, clazz);
-    return instanceName;
+Mediator.prototype.createInstance = function (name, clazz) {
+    const instance = this.objectiveModelerHook.modeler.createInstance(name, clazz);
+    return instance;
 }
 
 // === OLC helpers

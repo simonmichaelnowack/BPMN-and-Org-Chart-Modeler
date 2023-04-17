@@ -150,12 +150,6 @@ OmModeler.prototype.createObject = function (name) {
     return shape.businessObject;
 }
 
-OmModeler.prototype.createName = function (name, clazz) {
-    const objectInstance = this.get('elementFactory').createObjectInstance(name, clazz);
-    this._definitions.get('objectInstances').push(objectInstance);
-    return objectInstance;
-}
-
 OmModeler.prototype.renameObject = function (object, name) {
     this.get('modeling').updateLabel(this.get('elementRegistry').get(object.id), name);
 }
@@ -219,6 +213,38 @@ OmModeler.prototype.renameObjective = function (objectiveReference, name) {
     this._emit(ObjectiveEvents.DEFINITIONS_CHANGED, {definitions: this._definitions});
 }
 
+OmModeler.prototype.createInstance = function (name, clazz) {
+    const objectInstance = this.get('elementFactory').createObjectInstance(name, clazz);
+    this._definitions.get('objectInstances').push(objectInstance);
+    return objectInstance;
+}
+
+OmModeler.prototype.renameInstance = function (instance, name) {
+    instance.name = name;
+    this.getVisualsWithInstance(instance).forEach(element => {
+        this.get('eventBus').fire('element.changed', {
+            element
+        })
+    });
+}
+
+OmModeler.prototype.deleteInstance = function (instance) {
+    let changedVisuals = this.getVisualsWithInstance(instance);
+    this.getObjectsWithInstance(instance).forEach(element => {
+        element.instance = undefined;
+    });
+    changedVisuals.forEach(element =>
+        this.get('eventBus').fire('element.changed', {
+            element
+        })
+    );
+    let instances = this._definitions.get('objectInstances');
+    let index = instances.indexOf(instance);
+    if (index > -1) {
+        instances.splice(index, 1);
+    }
+}
+
 OmModeler.prototype.handleOlcListChanged = function (olcs, dryRun = false) {
     this._olcs = olcs;
 }
@@ -263,6 +289,14 @@ OmModeler.prototype.handleClassDeleted = function (clazz) {
             }
         }
     })
+
+    let instances = this._definitions.get('objectInstances');
+    for (let i = 0; i < instances.length; i++) {
+        if (clazz.id && instances[i].classRef?.id === clazz.id) {
+            instances.splice(i, 1);
+            i--;
+        }
+    }
     this.showObjective(this.getCurrentObjective());
     // This is needed to update the visual representation of the objective that is currently loaded.
     // This may need to be adapted once the error of links between deleted objects is resolved
@@ -291,6 +325,23 @@ OmModeler.prototype.getVisualsOfClass = function (clazz) {
         clazz.id &&
         element.businessObject.classRef?.id === clazz.id
     );
+}
+
+OmModeler.prototype.getVisualsWithInstance = function (instance) {
+    return this.get('elementRegistry').filter(element =>
+        is(element, 'om:Object') &&
+        instance.id &&
+        element.businessObject.instance?.id === instance.id
+    );
+}
+
+OmModeler.prototype.getObjectsWithInstance = function (instance) {
+    let objectives = this._definitions.get('rootElements');
+    let objects = objectives.map(objective => objective.get('boardElements')).flat(1).filter((element) =>
+        is(element, 'om:Object') &&
+        instance.id &&
+        element.instance?.id === instance.id);
+    return objects;
 }
 
 OmModeler.prototype.getObjectsOfClass = function (clazz) {

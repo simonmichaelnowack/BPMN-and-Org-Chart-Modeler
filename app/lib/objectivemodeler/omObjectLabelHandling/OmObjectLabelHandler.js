@@ -1,9 +1,8 @@
 import CommandInterceptor from "diagram-js/lib/command/CommandInterceptor";
-// import { without } from 'min-dash';
 import CommonEvents from "../../common/CommonEvents";
 import getDropdown from "../../util/Dropdown";
-import { appendOverlayListeners } from "../../util/HtmlUtil";
-import { formatStates, is } from "../../util/Util";
+import {appendOverlayListeners} from "../../util/HtmlUtil";
+import {is} from "../../util/Util";
 
 export default class OmObjectLabelHandler extends CommandInterceptor {
     constructor(eventBus, modeling, directEditing, overlays, objectiveModeler) {
@@ -15,27 +14,14 @@ export default class OmObjectLabelHandler extends CommandInterceptor {
         this._dropdownContainer.classList.add('dd-dropdown-multicontainer');
         this._classDropdown = getDropdown("Class");
         this._dropdownContainer.appendChild(this._classDropdown);
-        this._nameDropdown = getDropdown("Name");
-        this._dropdownContainer.appendChild(this._nameDropdown);
-        this._stateDropdown = getDropdown("States");
+        this._instanceDropdown = getDropdown("Instance");
+        this._dropdownContainer.appendChild(this._instanceDropdown);
+        this._stateDropdown = getDropdown("State");
         this._dropdownContainer.appendChild(this._stateDropdown);
         this._currentDropdownTarget = undefined;
         this._overlayId = undefined;
         this._overlays = overlays;
         this._objectiveModeler = objectiveModeler;
-
-        eventBus.on('element.changed', function (e) {
-            if (is(e.element, 'om:Object') && e.element.parent) {
-                const businessObject = e.element.businessObject;
-                const name = `${businessObject.classRef?.name} : ${businessObject.instance?.name}`;
-                const state = businessObject.state?.name;
-                if (businessObject.name !== name) {
-                    modeling.updateLabel(e.element, name, undefined, {
-                        omObjectLabelUpdate: true
-                    });
-                }
-            }
-        });
 
         eventBus.on('directEditing.activate', function (e) {
             if (is(e.active.element, 'om:Object')) {
@@ -55,55 +41,82 @@ export default class OmObjectLabelHandler extends CommandInterceptor {
                     this._stateDropdown.getEntries().forEach(entry => entry.setSelected(omObject.state === entry.option));
                 }
 
-                const updateNameSelection = () => {
-                    this._nameDropdown.getEntries().forEach(entry => entry.setSelected(omObject.instance === entry.option));
+                const updateInstanceSelection = () => {
+                    this._instanceDropdown.getEntries().forEach(entry => entry.setSelected(omObject.instance === entry.option));
+                }
+
+                const populateStateDropdown = (states) => {
+                    this._stateDropdown.populate(
+                        states,
+                        (state, element) => {
+                            this.updateState(state, element);
+                            updateStateSelection();
+                        },
+                        element
+                        );
+                }
+
+                const populateInstanceDropdown = (instances) => {
+                    this._instanceDropdown.populate(
+                        instances,
+                        (instance, element) => {
+                            this.updateInstance(instance, element);
+                            updateInstanceSelection();
+                        },
+                        element,
+                        (entry, newValue) => {
+                            this._objectiveModeler.renameInstance(entry.option, newValue)
+                            populateInstanceDropdown(this._objectiveModeler.getObjectInstancesOfClass(omObject.classRef));
+                            omObject.classRef && this._instanceDropdown.addCreateElementInput(event => this._dropdownContainer.confirm());
+                            updateInstanceSelection();
+                        },
+                        (entry) => {
+                            this._objectiveModeler.deleteInstance(entry.option);
+                            populateInstanceDropdown(this._objectiveModeler.getObjectInstancesOfClass(omObject.classRef));
+                            omObject.classRef && this._instanceDropdown.addCreateElementInput(event => this._dropdownContainer.confirm());
+                            updateInstanceSelection();
+                        },
+                        true,
+                        true
+                    );
                 }
 
                 const updateClassSelection = () => {
                     if (olcs.length > 0) {
                         let states = [];
-                        let names = [];
+                        let instances = [];
                         if (omObject.classRef) {
                             currentOlc = olcs.filter(olc => olc.classRef === omObject.classRef)[0];
                             this._classDropdown.getEntries().forEach(entry => entry.setSelected(entry.option === currentOlc));
                             states = currentOlc.get('Elements').filter(element => is(element, 'olc:State'));
-                            names = this._objectiveModeler.getObjectInstancesOfClass(omObject.classRef);
+                            instances = this._objectiveModeler.getObjectInstancesOfClass(omObject.classRef);
                         }
 
-                        this._stateDropdown.populate(states, (state, element) => {
-                            this.updateState(state, element);
-                            updateStateSelection();
-                        }, element);
-
-                        this._nameDropdown.populate(names, (name, element) => {
-                            this.updateName(name, element);
-                            updateNameSelection();
-                        }, element);
+                        populateStateDropdown(states);
+                        populateInstanceDropdown(instances);
 
                         // Prevent adding new states if no dataclass is selected
                         omObject.classRef && this._stateDropdown.addCreateElementInput(event => this._dropdownContainer.confirm());
-                        omObject.classRef && this._nameDropdown.addCreateElementInput(event => this._dropdownContainer.confirm());
+                        omObject.classRef && this._instanceDropdown.addCreateElementInput(event => this._dropdownContainer.confirm());
                     } else {
-                        this._stateDropdown.populate([], (state, element) => {
-                            this.updateState(state, element);
-                            updateStateSelection();
-                        }, element);
-                        this._nameDropdown.populate([], (name, element) => {
-                            this.updateName(name, element);
-                            updateNameSelection();
-                        }, element);
+                        populateStateDropdown([]);
+                        populateInstanceDropdown([])
                     }
                 }
 
                 const populateClassDropdown = () => {
-                    this._classDropdown.populate(olcs, (olc, element) => {
+                    this._classDropdown.populate(
+                        olcs,
+                        (olc, element) => {
                         this.updateClass(olc.classRef, element);
                         updateClassSelection();
-                    }, element);
+                    },
+                        element
+                    );
                     this._classDropdown.addCreateElementInput(event => this._dropdownContainer.confirm());
                     updateClassSelection();
                     updateStateSelection();
-                    updateNameSelection();
+                    updateInstanceSelection();
                 }
 
                 populateClassDropdown();
@@ -111,7 +124,7 @@ export default class OmObjectLabelHandler extends CommandInterceptor {
                 this._dropdownContainer.confirm = (event) => {
                     const newClassInput = this._classDropdown.getInputValue();
                     const newStateInput = this._stateDropdown.getInputValue();
-                    const newNameInput = this._nameDropdown.getInputValue();
+                    const newInstanceInput = this._instanceDropdown.getInputValue();
                     let needUpdate = false;
                     if (newClassInput !== '') {
                         const newClass = this.createDataclass(newClassInput);
@@ -124,18 +137,18 @@ export default class OmObjectLabelHandler extends CommandInterceptor {
                         this.updateState(newState, element);
                         needUpdate = true;
                     }
-                    if (newNameInput !== '') {
-                        const newName = this.createName(newNameInput, currentOlc.classRef);
-                        this.updateName(newName, element);
+                    if (newInstanceInput !== '') {
+                        const newInstance = this._objectiveModeler.createInstance(newInstanceInput, currentOlc.classRef);
+                        this.updateInstance(newInstance, element);
                         needUpdate = true;
                     }
-                    
+
                     if (needUpdate) {
                         updateClassSelection();
                         updateStateSelection();
-                        updateNameSelection();
+                        updateInstanceSelection();
                         this._stateDropdown.focusInput();
-                        this._nameDropdown.focusInput();
+                        this._instanceDropdown.focusInput();
                     }
                 }
 
@@ -148,7 +161,7 @@ export default class OmObjectLabelHandler extends CommandInterceptor {
                         return false;
                     } else if (event.target.classList.contains('dd-dropdown-entry')) {
                         this._classDropdown.clearInput();
-                        this._nameDropdown.clearInput();
+                        this._instanceDropdown.clearInput();
                         this._stateDropdown.clearInput();
                     } else if (event.target.tagName !== 'INPUT' || !event.target.value) {
                         this._dropdownContainer.confirm();
@@ -211,24 +224,17 @@ export default class OmObjectLabelHandler extends CommandInterceptor {
         });
     }
 
-    updateName(newName, element) {
-        element.businessObject.instance = newName;
+    updateInstance(newInstance, element) {
+        element.businessObject.instance = newInstance;
         this._eventBus.fire('element.changed', {
             element
         });
     }
-    
+
     createState(name, olc) {
         return this._eventBus.fire(CommonEvents.STATE_CREATION_REQUESTED, {
             name,
             olc
-        });
-    }
-
-    createName(name, clazz) {
-        return this._eventBus.fire(CommonEvents.NAME_CREATION_REQUESTED, {
-            name,
-            clazz
         });
     }
 
