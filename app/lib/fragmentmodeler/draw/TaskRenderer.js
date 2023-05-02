@@ -1,11 +1,20 @@
 import BaseRenderer from "diagram-js/lib/draw/BaseRenderer";
 import {is} from "../../util/Util";
 import {assign} from 'min-dash';
-import {getLabelColor, getSemantic} from 'bpmn-js/lib/draw/BpmnRenderUtil';
+import {
+    getCirclePath,
+    getDiamondPath, getFillColor,
+    getLabelColor, getRectPath,
+    getRoundRectPath,
+    getSemantic, getStrokeColor
+} from 'bpmn-js/lib/draw/BpmnRenderUtil';
 import {
     append as svgAppend,
-    classes as svgClasses
+    classes as svgClasses,
+    remove as svgRemove,
+    select as svgSelect
 } from 'tiny-svg';
+import BpmnRenderer from "bpmn-js/lib/draw/BpmnRenderer";
 
 const HIGH_PRIORITY = 1500;
 
@@ -23,7 +32,9 @@ export default class TaskRenderer extends BaseRenderer {
 
     drawShape(parentNode, element) {
         const shape = this.bpmnRenderer.drawShape(parentNode, element);
+        svgRemove(svgSelect(parentNode, '.djs-label'));
         this.renderEmbeddedDurationLabel(parentNode, element, 'right-top');
+        this.renderEmbeddedLabel(parentNode, element, 'center-middle');
         return shape;
     }
 
@@ -40,6 +51,36 @@ export default class TaskRenderer extends BaseRenderer {
             box: element,
             align: align,
             padding: 2,
+            style: {
+                fill: getLabelColor(element)
+            }
+        });
+    }
+
+    renderEmbeddedLabel(parentGfx, element, align) {
+        let semantic = getSemantic(element);
+        var displayedText = "";
+
+        if (semantic.role) {
+            displayedText = displayedText + semantic.role;
+        }
+        if (semantic.NoP) {
+            if (semantic.role) {
+                displayedText = displayedText + " ";
+            }
+            displayedText = displayedText + "(" + semantic.NoP + ")";
+        }
+        if (semantic.name) {
+            if (semantic.role || semantic.NoP) {
+                displayedText = displayedText + "\n: ";
+            }
+            displayedText = displayedText + semantic.name;
+        }
+
+        return this.renderLabel(parentGfx, displayedText, {
+            box: element,
+            align: align,
+            padding: 5,
             style: {
                 fill: getLabelColor(element)
             }
