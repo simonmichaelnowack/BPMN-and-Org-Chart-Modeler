@@ -3,8 +3,8 @@ import BpmnModeler from 'bpmn-js/lib/Modeler';
 import fragmentPaletteModule from './palette';
 import customModelingModule from './modeling';
 import bpmnExtension from './moddle/bpmnextension.json';
-import { is } from 'bpmn-js/lib/util/ModelUtil';
-import { without } from 'min-dash';
+import {is} from 'bpmn-js/lib/util/ModelUtil';
+import {without} from 'min-dash';
 import taskLabelHandling from "./taskLabelHandling";
 import taskRenderer from "./draw";
 
@@ -56,6 +56,27 @@ FragmentModeler.prototype.handleOlcListChanged = function (olcs, dryRun=false) {
     this._olcs = olcs;
 }
 
+FragmentModeler.prototype.handleRoleListChanged = function (roles, dryRun=false) {
+    this._roles = roles;
+}
+
+FragmentModeler.prototype.handleRoleRenamed = function (role) {
+    this.getTasksWithRole(role).forEach((element) =>
+        this.get('eventBus').fire('element.changed', {
+            element
+        })
+    );
+}
+
+FragmentModeler.prototype.handleRoleDeleted = function (role) {
+    this.getTasksWithRole(role).forEach((element, gfx) => {
+        element.businessObject.role = undefined;
+        this.get('eventBus').fire('element.changed', {
+            element
+        });
+    });
+}
+
 FragmentModeler.prototype.handleStateRenamed = function (olcState) {
     this.getDataObjectReferencesInState(olcState).forEach((element, gfx) =>
         this.get('eventBus').fire('element.changed', {
@@ -101,6 +122,14 @@ FragmentModeler.prototype.getDataObjectReferencesOfClass = function (clazz) {
         element.type !== 'label' &&
         clazz.id &&
         element.businessObject.dataclass?.id === clazz.id
+    );
+}
+
+FragmentModeler.prototype.getTasksWithRole = function (role) {
+    return this.get('elementRegistry').filter((element, gfx) =>
+        is(element, 'bpmn:Task') &&
+        role.id &&
+        element.businessObject.role?.id === role.id
     );
 }
 

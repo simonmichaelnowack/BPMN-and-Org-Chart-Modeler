@@ -1,8 +1,7 @@
 import CommandInterceptor from 'diagram-js/lib/command/CommandInterceptor';
 import inherits from 'inherits';
 import {isFunction, without} from 'min-dash';
-import {is} from '../util/Util';
-import {namespace, root} from '../util/Util';
+import {is, namespace, root} from '../util/Util';
 import AbstractHook from './AbstractHook';
 import CommonEvents from '../common/CommonEvents';
 import ObjectiveEvents from "../objectivemodeler/ObjectiveEvents";
@@ -57,6 +56,10 @@ export default function Mediator() {
 
     this.on(CommonEvents.STATE_CREATION_REQUESTED, event => {
         return this.createState(event.name, event.olc);
+    });
+
+    this.on(CommonEvents.ROLE_CREATION_REQUESTED, event => {
+        return this.roleCreationRequested(event.name);
     });
 
 }
@@ -215,6 +218,39 @@ Mediator.prototype.olcDeletionRequested = function (olc) {
 Mediator.prototype.olcRenamed = function (olc, name) {
     this.dataModelerHook.modeler.renameClass(olc.classRef, name);
 }
+
+// === Role helpers
+
+Mediator.prototype.roleListChanged = function () {
+    let roles = this.roleModelerHook.modeler.getRoles();
+    this.fragmentModelerHook.modeler.handleRoleListChanged(roles);
+}
+
+Mediator.prototype.roleCreationRequested = function (name) {
+    const role = this.roleModelerHook.modeler.createRole(name);
+    this.roleModelerHook.focusElement(role);
+    return role;
+}
+
+Mediator.prototype.addedRole = function () {
+    this.roleListChanged();
+}
+
+Mediator.prototype.confirmRoleDeletion = function (role) {
+    const affectedTasks = this.fragmentModelerHook.modeler.getTasksWithRole(role);
+    return confirm('Do you really want to delete role \"' + role.name + '\" ?'
+        + '\n' + 'It would be removed from ' + affectedTasks.length + ' Task(s).');
+}
+
+Mediator.prototype.deletedRole = function (role) {
+    this.fragmentModelerHook.modeler.handleRoleDeleted(role);
+    this.roleListChanged();
+}
+
+Mediator.prototype.renamedRole = function (role) {
+    this.fragmentModelerHook.modeler.handleRoleRenamed(role);
+}
+
 
 // === State helpers (used within OLC Modeler)
 
@@ -377,7 +413,7 @@ Mediator.prototype.DependencyModelerHook = function (eventBus, dependencyModeler
         }
     });
 
-    eventBus.on(CommonEvents.OBJECTIVE_RENAMED, event => {
+    eventBus.on(ObjectiveEvents.OBJECTIVE_RENAMED, event => {
         const objective = event.objective.businessObject;
         this.mediator.renamedObjective(objective, objective.name);
     });
@@ -416,6 +452,12 @@ Mediator.prototype.FragmentModelerHook = function (eventBus, fragmentModeler) {
                     throw new Error('Could not resolve olc state with id ' + value);
                 }
                 element.get('states').push(state);
+            } else if (property === 'fcm:role') {
+                const role = this.mediator.roleModelerHook.modeler.get('elementRegistry').get(value).businessObject;
+                if (!role) {
+                    throw new Error('Could not resolve role with id ' + value);
+                }
+                element.role = role;
             }
         });
     });
@@ -657,7 +699,7 @@ Mediator.prototype.RoleModelerHook = function (eventBus, roleModeler) {
         'shape.create'
     ], event => {
         if (is(event.context.shape, 'rom:Role')) {
-            // this.mediator.addedRole(event.context.shape.businessObject);
+            this.mediator.addedRole(event.context.shape.businessObject);
         }
     });
 
@@ -665,8 +707,7 @@ Mediator.prototype.RoleModelerHook = function (eventBus, roleModeler) {
         'shape.create'
     ], event => {
         if (is(event.context.shape, 'rom:Role')) {
-            console.log(event);
-            //this.mediator.addedState(event.context.shape.businessObject);
+            // console.log(event);
         }
     });
 
@@ -674,7 +715,7 @@ Mediator.prototype.RoleModelerHook = function (eventBus, roleModeler) {
         'shape.delete'
     ], event => {
         if (is(event.context.shape, 'rom:Role')) {
-            // this.mediator.deletedClass(event.context.shape.businessObject);
+            this.mediator.deletedRole(event.context.shape.businessObject);
         }
     });
 
@@ -682,7 +723,7 @@ Mediator.prototype.RoleModelerHook = function (eventBus, roleModeler) {
         'shape.delete'
     ], event => {
         if (is(event.context.shape, 'rom:Role')) {
-            console.log(event);
+            // console.log(event);
             //this.mediator.deletedState(event.context.shape.businessObject);
         }
     });
@@ -692,7 +733,7 @@ Mediator.prototype.RoleModelerHook = function (eventBus, roleModeler) {
     ], event => {
         event.context.elements = event.context.elements.filter(element => {
             if (is(element, 'rom:Role')) {
-                return this.modeler.deleteRole(element);
+                return this.mediator.confirmRoleDeletion(element.businessObject);
             } else {
                 return true;
             }
@@ -703,19 +744,17 @@ Mediator.prototype.RoleModelerHook = function (eventBus, roleModeler) {
     this.executed([
         'element.updateLabel'
     ], event => {
-        // var changedLabel = event.context.element.businessObject.labelAttribute;
-        // if (is(event.context.element, 'od:Class') && (changedLabel === 'name' || !changedLabel)) {
-        //     this.mediator.renamedRole(event.context.element.businessObject);
-        // }
+        this.mediator.renamedRole(event.context.element);
     });
 
     this.reverted([
         'element.updateLabel'
     ], event => {
-        // var changedLabel = event.context.element.businessObject.labelAttribute;
-        // if (is(event.context.element, 'od:Class') && (changedLabel === 'name' || !changedLabel)) {
-        //     this.mediator.renamedRole(event.context.element.businessObject);
-        // }
+
+    });
+
+    eventBus.on('import.render.complete', event => {
+        this.mediator.roleListChanged(this.modeler.getRoles());
     });
 }
 inherits(Mediator.prototype.RoleModelerHook, CommandInterceptor);

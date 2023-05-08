@@ -14,9 +14,7 @@ import Checker from './lib/guidelines/Checker';
 import ErrorBar from './lib/guidelines/ErrorBar';
 import {download, upload} from './lib/util/FileUtil';
 import getDropdown from "./lib/util/Dropdown";
-import {
-    classes as domClasses
-} from 'min-dom';
+import {classes as domClasses} from 'min-dom';
 
 import conferenceProcess from '../resources/conferenceModel/process.bpmn';
 import conferenceDataModel from '../resources/conferenceModel/datamodel.xml';
@@ -125,11 +123,11 @@ async function loadDebugData() {
 async function createNewDiagram() {
     try {
         checker.deactivate();
+        await roleModeler.createDiagram();
         await dependencyModeler.createNew();
+        await dataModeler.importXML(newDatamodel);
         await fragmentModeler.importXML(diagramXML);
         await olcModeler.createNew();
-        await dataModeler.importXML(newDatamodel);
-        await roleModeler.createDiagram();
         await objectiveModeler.createDiagram();
         terminationConditionModeler.createNew();
         if (LOAD_DUMMY) {
@@ -195,11 +193,11 @@ async function importFromZip(zipData) {
     });
     await dependencyModeler.importXML(await files.dependencyModel.async("string"));
     await dataModeler.importXML(await files.dataModel.async("string"));
+    await roleModeler.importXML(await files.roleModel.async("string"));
     await olcModeler.importXML(await files.olcs.async("string"));
     await fragmentModeler.importXML(await files.fragments.async("string"));
     await terminationConditionModeler.importXML(await files.terminationCondition.async("string"));
     await objectiveModeler.importXML(await files.objectiveModel.async("string"));
-    await roleModeler.importXML(await files.roleModel.async("string"));
     checker.activate();
 }
 
