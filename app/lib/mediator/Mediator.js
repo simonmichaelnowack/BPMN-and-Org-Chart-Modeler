@@ -562,14 +562,17 @@ Mediator.prototype.ObjectiveModelerHook = function (eventBus, objectiveModeler) 
           }
           element.classRef = dataClass;
         }
-        if (property === "om:state") {
-          const state =
-            this.mediator.olcModelerHook.modeler.getStateById(value);
-          if (!state) {
-            throw new Error("Could not resolve state with id " + value);
+          if (property === "om:states") {
+              const state = this.mediator.olcModelerHook.modeler.getStateById(value);
+              if (!state) {
+                  throw new Error("Could not resolve state with id " + value);
+              }
+              if(element.states){
+                  element.states.push(state);
+              } else {
+                  element.states = [state];
+              }
           }
-          element.state = state;
-        }
         if (property === "odDi:objectiveRef") {
           const objective = this.mediator.dependencyModelerHook.modeler
             .get("elementRegistry")
