@@ -22,6 +22,13 @@ export default function getDropdown(name = "") {
             dropdownTitle.innerHTML = name;
             this.appendChild(dropdownTitle);
         }
+        
+        if(this.className != "dd-dropdown-menu-warnings"){
+            var dropdownContent = document.createElement("div");
+            dropdownContent.classList.add("dd-dropdown-content");
+            this.appendChild(dropdownContent);
+        }
+
         for (const option of options) {
             const box = document.createElement("div");
             box.classList.add("dd-dropdown-box");
@@ -90,20 +97,34 @@ export default function getDropdown(name = "") {
                     }
                 }
             };
-            this.appendChild(box);
 
+            if(this.className != "dd-dropdown-menu-warnings"){
+                dropdownContent.appendChild(box);
+            }else {
+                this.appendChild(box);
+            }
+            
             // Delete and Edit name button in Objective Model
             //display none
         }
     };
 
     dropdownMenu.getEntries = function () {
-        let boxList = Array.from(this.children).filter((child) =>
+        if(this.className == "dd-dropdown-menu-warnings"){
+            let boxList = Array.from(this.children).filter((child) =>
+                child.classList.contains("dd-dropdown-box")
+            );
+            return boxList.map((box) =>
+                box.firstChild
+            );
+        }else {
+            let boxList = Array.from(this.children[1].children).filter((child) =>
             child.classList.contains("dd-dropdown-box")
-        );
-        return boxList.map((box) =>
+             );
+            return boxList.map((box) =>
             box.firstChild
-        );
+            );
+        }
     };
 
     dropdownMenu.getEntry = function (option) {
