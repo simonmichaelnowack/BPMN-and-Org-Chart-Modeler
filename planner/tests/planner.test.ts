@@ -12,157 +12,220 @@ import {Objective} from "../types/goal/Objective";
 import {ObjectiveNode} from "../types/goal/ObjectiveNode";
 
 // Dataclasses
-const house = new Dataclass("house");
-const wall = new Dataclass("wall");
-const cable = new Dataclass("cable");
+let house: Dataclass;
+let wall: Dataclass;
+let cable: Dataclass;
 
 // Instances
-const mapleStreetInit = new DataObjectInstance("house:1", house, "init");
-const mapleStreetPainted = new DataObjectInstance("house:1", house, "painted");
-const mapleStreetTiled = new DataObjectInstance("house:1", house, "tiled");
-const mapleStreetPlastered = new DataObjectInstance("house:1", house, "plastered");
+let mapleStreetInit: DataObjectInstance;
+let mapleStreetPainted: DataObjectInstance;
+let mapleStreetTiled: DataObjectInstance;
+let mapleStreetPlastered: DataObjectInstance;
 
-const wallNorthAvailable = new DataObjectInstance("wall:1", wall, "available");
-const wallNorthStanding = new DataObjectInstance("wall:1", wall, "standing");
-const wallSouthAvailable = new DataObjectInstance("wall:2", wall, "available");
-const wallSouthStanding = new DataObjectInstance("wall:2", wall, "standing");
+let wallNorthAvailable: DataObjectInstance;
+let wallNorthStanding: DataObjectInstance;
+let wallSouthAvailable: DataObjectInstance;
+let wallSouthStanding: DataObjectInstance;
 
-const redCableAvailable = new DataObjectInstance("cable:1", cable, "available");
+let redCableAvailable: DataObjectInstance;
 
 // Instance links
-const wallNorthMapleStreetLink = new InstanceLink(wallNorthStanding, mapleStreetPlastered);
-const wallSouthMapleStreetLink = new InstanceLink(wallSouthStanding, mapleStreetPlastered);
+
+let wallNorthMapleStreetLink: InstanceLink;
+let wallSouthMapleStreetLink: InstanceLink;
 
 // Roles
-const painter = new Role("painter");
-const tiler = new Role("tiler");
-const electrician = new Role("electrician");
-const builder = new Role("builder");
+let painter: Role;
+let tiler: Role;
+let electrician: Role;
+let builder: Role;
 
 // Resources
-const picasso = new Resource("Picasso", painter, 1);
-const michelangelo = new Resource("Michelangelo", tiler, 1);
-const tesla = new Resource("Tesla", electrician, 1);
-const bob = new Resource("Bob", builder, 1);
+let picasso: Resource;
+let michelangelo: Resource;
+let tesla: Resource;
+let bob: Resource;
 
 // DataObjectReferences
-const houseInit = new DataObjectReference(house, ["init"], false);
-const housePainted = new DataObjectReference(house, ["painted"], false);
-const housePlastered = new DataObjectReference(house, ["plastered"], false);
-const houseTiled = new DataObjectReference(house, ["tiled"], false);
-const cableAvailable = new DataObjectReference(cable, ["available"], false);
-const wallAvailable = new DataObjectReference(wall, ["available"], true);
-const wallStanding = new DataObjectReference(wall, ["standing"], true);
+let houseInit: DataObjectReference;
+let housePainted: DataObjectReference;
+let housePlastered: DataObjectReference;
+let houseTiled: DataObjectReference;
+let cableAvailable: DataObjectReference;
+let wallAvailable: DataObjectReference;
+let wallStanding: DataObjectReference;
 
 // IOSets
-const inputSetPaint = new IOSet([houseInit]);
-const outputSetPaint = new IOSet([housePainted]);
+let inputSetPaint: IOSet;
+let outputSetPaint: IOSet;
 
-const inputSetPlaster = new IOSet([wallStanding]);
-const outputSetPlaster = new IOSet([housePlastered]);
+let inputSetPlaster: IOSet;
+let outputSetPlaster: IOSet;
 
-const inputSetPutWalls = new IOSet([wallAvailable]);
-const outputSetPutWalls = new IOSet([wallStanding]);
+let inputSetPutWalls: IOSet;
+let outputSetPutWalls: IOSet;
 
-const inputSetTile = new IOSet([housePainted]);
-const outputSetTile = new IOSet([houseTiled]);
+let inputSetTile: IOSet;
+let outputSetTile: IOSet;
 
-const inputSetLay = new IOSet([housePainted, cableAvailable]);
-const outputSetLay = new IOSet([]);
+let inputSetLay: IOSet;
+let outputSetLay: IOSet;
 
-const outputSetBuyCables = new IOSet([cableAvailable]);
+
+
+let outputSetBuyCables: IOSet;
 
 // Activities
-const paint = new Activity("paint", 1, 1, painter, [inputSetPaint], outputSetPaint);
-const plaster = new Activity("plaster", 1, 1, painter, [inputSetPlaster], outputSetPlaster);
-const putWalls = new Activity("putWalls", 1, 1, builder, [inputSetPutWalls], outputSetPutWalls);
-const tile = new Activity("tile", 1, 1, tiler, [inputSetPaint, inputSetTile], outputSetTile);
-const lay = new Activity("lay", 1, 1, electrician, [inputSetLay], outputSetLay);
-const buyCables = new Activity("buyCables", 1, 1, electrician, [], outputSetBuyCables);
+let paint: Activity;
+let plaster: Activity;
+let putWalls: Activity;
+let tile: Activity;
+let lay: Activity;
+let buyCables: Activity;
 
 // ObjectiveNodes
-const objectiveNode = new ObjectiveNode("house:1", house, ["painted"]);
+let objectiveNode: ObjectiveNode;
 
 // Objectives
-const objective = new Objective([objectiveNode], []);
+let objective: Objective;
+
+// Project State
+let activities: Activity[];
+let resources: Resource[];
+let currentState: ExecutionState;
 
 
+beforeEach(() => {
+    //reset all dataclasses
+    house = new Dataclass("house");
+    wall = new Dataclass("wall");
+    cable = new Dataclass("cable");
+
+    //reset all instances
+    mapleStreetInit = new DataObjectInstance("house:1", house, "init");
+    mapleStreetPainted = new DataObjectInstance("house:1", house, "painted");
+    mapleStreetTiled = new DataObjectInstance("house:1", house, "tiled");
+    mapleStreetPlastered = new DataObjectInstance("house:1", house, "plastered");
+
+    wallNorthAvailable = new DataObjectInstance("wall:1", wall, "available");
+    wallNorthStanding = new DataObjectInstance("wall:1", wall, "standing");
+    wallSouthAvailable = new DataObjectInstance("wall:2", wall, "available");
+    wallSouthStanding = new DataObjectInstance("wall:2", wall, "standing");
+
+    redCableAvailable = new DataObjectInstance("cable:1", cable, "available");
+
+    //reset all links
+    wallNorthMapleStreetLink = new InstanceLink(wallNorthStanding,mapleStreetPlastered);
+    wallSouthMapleStreetLink = new InstanceLink(wallSouthStanding,mapleStreetPlastered);
+
+    //reset all roles
+    painter = new Role("painter");
+    tiler = new Role("tiler");
+    electrician = new Role("electrician");
+    builder = new Role("builder");
+
+    //reset all resources
+    picasso = new Resource("Picasso", painter, 1);
+    michelangelo = new Resource("Michelangelo", tiler, 1);
+    tesla = new Resource("Tesla", electrician, 1);
+    bob = new Resource("Bob",builder,1);
+
+    //reset all dataObjectReferences
+    houseInit = new DataObjectReference(house,["init"],false);
+    housePainted = new DataObjectReference(house,["painted"], false);
+    housePlastered = new DataObjectReference(house,["plastered"], false);
+    houseTiled = new DataObjectReference(house,["tiled"], false);
+    cableAvailable = new DataObjectReference( cable,["available"],false);
+    wallAvailable = new DataObjectReference(wall,["available"],true);
+    wallStanding = new DataObjectReference(wall,["standing"],true);
+
+    //reset all IOSets
+    inputSetPaint = new IOSet([houseInit]);
+    outputSetPaint = new IOSet([housePainted]);
+
+    inputSetPlaster = new IOSet([wallStanding]);
+    outputSetPlaster = new IOSet([housePlastered]);
+
+    inputSetPutWalls = new IOSet([wallAvailable]);
+    outputSetPutWalls = new IOSet([wallStanding]);
+
+    inputSetTile = new IOSet([housePainted]);
+    outputSetTile = new IOSet([houseTiled]);
+
+    inputSetLay = new IOSet([housePainted, cableAvailable]);
+    outputSetLay = new IOSet([]);
+
+    outputSetBuyCables = new IOSet([cableAvailable]);
+
+    //reset ObjectiveNodes
+    objectiveNode = new ObjectiveNode("house:1", house, ["painted"]);
+
+    //reset Objectives
+    objective = new Objective([objectiveNode], []);
+
+    //reset all activities
+    paint = new Activity("paint", 1, 1, painter, [inputSetPaint], outputSetPaint);
+    plaster = new Activity("plaster", 1, 1, painter, [inputSetPlaster], outputSetPlaster);
+    putWalls = new Activity("putWalls", 1, 1, builder, [inputSetPutWalls], outputSetPutWalls);
+    tile = new Activity("tile", 1, 1, tiler, [inputSetPaint, inputSetTile], outputSetTile);
+    lay = new Activity("lay", 1, 1, electrician, [inputSetLay], outputSetLay);
+    buyCables = new Activity("buyCables", 1, 1, electrician, [], outputSetBuyCables);
+
+    //reset all project states
+    activities = [paint];
+    resources = [picasso];
+    currentState = new ExecutionState([mapleStreetInit], [], resources, 0);
+});
 
 describe('determining executable Activities', () => {
 
     test('activity with one inputSet set should be executable', () => {
-        let currentState = new ExecutionState([mapleStreetInit], []);
-        let activities = [paint];
-        let ressources = [picasso];
-
-        expect(currentState.executableActivities(activities, ressources)).toEqual([paint]);
+        expect(currentState.executableActivities(activities)).toEqual([paint]);
     });
 
     test('activity with many inputSets sets should be executable', () => {
-        let currentState = new ExecutionState([mapleStreetInit], []);
-        let activities = [paint, tile];
-        let ressources = [picasso, michelangelo];
-
-        expect(currentState.executableActivities(activities, ressources)).toEqual([paint, tile]);
+        activities = [paint, tile];
+        currentState.resources = [picasso, michelangelo];
+        expect(currentState.executableActivities(activities)).toEqual([paint, tile]);
     });
 
     test('activity with many data objects within one set should be executable', () => {
-        let currentState = new ExecutionState([mapleStreetPainted, redCableAvailable], []);
-        let activities = [paint, lay];
-        let ressources = [picasso, tesla];
-
-        expect(currentState.executableActivities(activities, ressources)).toEqual([lay]);
+        activities = [paint, lay];
+        currentState.resources = [picasso, tesla];
+        currentState.dataObjectInstances = [mapleStreetPainted, redCableAvailable];
+        expect(currentState.executableActivities(activities)).toEqual([lay]);
     });
 });
 
 describe('executing Activities', () => {
 
     test('activity with one inputSet is executable', () => {
-        let currentState = new ExecutionState([mapleStreetInit], []);
-
-        paint.execute(currentState, [mapleStreetInit]);
+        paint.execute(currentState,[mapleStreetInit]);
         expect(currentState.dataObjectInstances).toEqual([mapleStreetPainted]);
     });
 
     test('activity with many inputSets is executable', () => {
-        let currentState = new ExecutionState([mapleStreetInit], []);
-
-        tile.execute(currentState, [mapleStreetInit]);
+        tile.execute(currentState,[mapleStreetInit]);
         expect(currentState.dataObjectInstances).toEqual([mapleStreetTiled]);
     });
 
     test('activity that creates a new instance is executable', () => {
-        let currentState = new ExecutionState([mapleStreetInit], []);
-
-        buyCables.execute(currentState, []);
+        buyCables.execute(currentState,[]);
         expect(currentState.dataObjectInstances).toEqual([mapleStreetInit, redCableAvailable]);
     });
 
     test('activity that creates a new instance links the new instance to the input', () => {
-        let currentState = new ExecutionState([wallNorthStanding, wallSouthStanding], []);
-
-        plaster.execute(currentState, [wallNorthStanding, wallSouthStanding]);
-        expect(currentState.dataObjectInstances).toEqual([wallNorthStanding, wallSouthStanding, mapleStreetPlastered]);
-        expect(currentState.links).toEqual([wallNorthMapleStreetLink, wallSouthMapleStreetLink]);
+        currentState.dataObjectInstances = [wallNorthStanding,wallSouthStanding];
+        plaster.execute(currentState,[wallNorthStanding,wallSouthStanding]);
+        expect(currentState.dataObjectInstances).toEqual([wallNorthStanding,wallSouthStanding, mapleStreetPlastered]);
+        expect(currentState.instanceLinks).toEqual([wallNorthMapleStreetLink,wallSouthMapleStreetLink]);
     });
 
     test('activity with a list input is executable', () => {
-        let currentState = new ExecutionState([mapleStreetInit, wallNorthAvailable, wallSouthAvailable], []);
-
-        putWalls.execute(currentState, [wallNorthAvailable, wallSouthAvailable]);
+        currentState.dataObjectInstances = [mapleStreetInit,wallNorthAvailable,wallSouthAvailable];
+        putWalls.execute(currentState,[wallNorthAvailable,wallSouthAvailable]);
         expect(currentState.dataObjectInstances).toEqual([mapleStreetInit, wallNorthStanding, wallSouthStanding]);
     });
-
-    // Instances reset
-    const mapleStreetInit = new DataObjectInstance("house:1", house, "init");
-    const mapleStreetPainted = new DataObjectInstance("house:1", house, "painted");
-    const mapleStreetTiled = new DataObjectInstance("house:1", house, "tiled");
-    const mapleStreetPlastered = new DataObjectInstance("house:1", house, "plastered");
-
-    const wallNorthAvailable = new DataObjectInstance("wall:1", wall, "available");
-    const wallNorthStanding = new DataObjectInstance("wall:1", wall, "standing");
-    const wallSouthAvailable = new DataObjectInstance("wall:2", wall, "available");
-    const wallSouthStanding = new DataObjectInstance("wall:2", wall, "standing");
 });
 
 describe('generating plans', () => {
@@ -170,8 +233,6 @@ describe('generating plans', () => {
     let planner = new Planner();
 
     test('plan one activity', () => {
-        let currentState = new ExecutionState([mapleStreetInit], []);
-
         expect(planner.simulateUntil(currentState, objective, [paint], [picasso])).toEqual(true);
     });
 });
