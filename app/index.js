@@ -25,6 +25,9 @@ import conferenceTerminationCondition from '../resources/conferenceModel/termina
 import Zip from 'jszip';
 import {appendOverlayListeners} from "./lib/util/HtmlUtil";
 
+import {parseObjects} from "../planner/parser/ModelObjectParser";
+import {exportExecutionPlan} from "../dist/excel/excel.js";
+
 const LOAD_DUMMY = false; // Set to true to load conference example data
 const SHOW_DEBUG_BUTTONS = false; // Set to true to show additional buttons for debugging
 
@@ -218,6 +221,25 @@ async function importFromZip(zipData) {
     checker.activate();
 }
 
+export async function planButtonAction() {
+    const planner = parseObjects(dataModeler, fragmentModeler, objectiveModeler, roleModeler, resourceModeler);
+    let executionLog = planner.generatePlan();
+    let blob = await exportExecutionPlan(executionLog);
+
+    const url = window.URL.createObjectURL(blob);
+
+    // Create a link element
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Execution Plan.xlsx';
+
+    // Programmatically click the link to initiate the download
+    link.click();
+
+    // Clean up the temporary URL
+    window.URL.revokeObjectURL(url);
+}
+
 // IO Buttons
 document.getElementById('newButton').addEventListener('click', () => {
     createNewDiagram();
@@ -238,10 +260,10 @@ document.getElementById('saveButton').addEventListener('click', () => exportToZi
 
 async function displayFileName(zipName) {
     document.getElementById("fileName").innerHTML = zipName;
-};
+}
 
 document.getElementById('planningButton').addEventListener('click', () => {
-    alert("This is not possible right now.");
+    planButtonAction();
 });
 
 async function navigationDropdown() {
@@ -267,8 +289,6 @@ async function navigationDropdown() {
         if (event.target === selectOlcComponent || event.target === selectedOlcSpan) {
             repopulateDropdown();
             showSelectOlcMenu();
-        } else {
-            return;
         }
     });
 
@@ -311,7 +331,7 @@ async function navigationDropdown() {
     selectOlcComponent.showValue(currentModeler);
     selectOlcComponent.appendChild(selectedOlcSpan);
     buttonBar.appendChild(selectOlcComponent);
-};
+}
 
 navigationDropdown();
 

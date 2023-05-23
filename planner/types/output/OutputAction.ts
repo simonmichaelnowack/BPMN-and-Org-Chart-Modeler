@@ -1,9 +1,9 @@
 import {DataObjectInstance} from "../executionState/DataObjectInstance";
-import {Activity} from "../fragments/Activity";
 import {Resource} from "../Resource";
+import {Action} from "../fragments/Action";
 
 export class OutputAction {
-    activity: Activity;
+    action: Action;
     start: number;
     end: number;
     resource: Resource | null;
@@ -11,8 +11,8 @@ export class OutputAction {
     inputList: DataObjectInstance[];
     outputList: DataObjectInstance[];
 
-    public constructor(activity: Activity, start: number, end: number, resource: Resource | null, capacity: number, inputList: DataObjectInstance[], outputList: DataObjectInstance[]) {
-        this.activity = activity;
+    public constructor(action: Action, start: number, end: number, resource: Resource | null, capacity: number, inputList: DataObjectInstance[], outputList: DataObjectInstance[]) {
+        this.action = action;
         this.start = start;
         this.end = end;
         this.resource = resource;

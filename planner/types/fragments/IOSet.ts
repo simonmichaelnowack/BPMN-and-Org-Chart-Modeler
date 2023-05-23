@@ -1,5 +1,5 @@
 import {DataObjectReference} from "./DataObjectReference";
-import {DataObjectInstance} from "../executionState/DataObjectInstance";
+import {ExecutionDataObjectInstance} from "../executionState/ExecutionDataObjectInstance";
 
 export class IOSet {
     set: DataObjectReference[];
@@ -8,12 +8,13 @@ export class IOSet {
         this.set = set;
     }
 
-    public isSatisfiedBy(executionState: DataObjectInstance[]): boolean {
+    public isSatisfiedBy(executionDataObjectInstances: ExecutionDataObjectInstance[]): boolean {
         for (let dataObjectReference of this.set) {
             let foundCorrespondingDataObjectInstance = false;
-            for (let dataObjectInstance of executionState) {
-                if (dataObjectInstance.dataclass == dataObjectReference.dataclass && dataObjectReference.states.includes(dataObjectInstance.state)) {
-                    foundCorrespondingDataObjectInstance =  true;
+            for (let executionDataObjectInstance of executionDataObjectInstances) {
+                if (dataObjectReference.isMatchedBy(executionDataObjectInstance)) {
+                    foundCorrespondingDataObjectInstance = true;
+                    break;
                 }
             }
             if (!foundCorrespondingDataObjectInstance) {
