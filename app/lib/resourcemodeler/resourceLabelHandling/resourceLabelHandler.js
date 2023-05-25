@@ -144,11 +144,7 @@ export default class ResourceLabelHandler extends CommandInterceptor {
                     } else if (!this._dropdownContainer.contains(event.target)) {
                         return false;
                     } else if (event.target.classList.contains('dd-dropdown-entry')) {
-                        this._nameDropdown.clearInput();
-                        this._capacityDropdown.clearInput();
                         this._rolesDropdown.clearInput();
-                        this._availabilityStartDropdown.clearInput();
-                        this._availabilityEndDropdown.clearInput();
                     } else if (event.target.tagName !== 'INPUT' || !event.target.value) {
                         this._dropdownContainer.confirm();
                     }
@@ -191,9 +187,6 @@ export default class ResourceLabelHandler extends CommandInterceptor {
         element.businessObject.name = newName;
         this._eventBus.fire('element.changed', {
             element
-        });
-        this._eventBus.fire(CommonEvents.OBJECTIVE_RENAMED, {
-            objective: element
         });
     }
 

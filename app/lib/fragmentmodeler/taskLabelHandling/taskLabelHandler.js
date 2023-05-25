@@ -119,10 +119,7 @@ export default class TaskLabelHandler extends CommandInterceptor {
                     } else if (!this._dropdownContainer.contains(event.target)) {
                         return false;
                     } else if (event.target.classList.contains('dd-dropdown-entry')) {
-                        this._nameDropdown.clearInput();
-                        this._durationDropdown.clearInput();
                         this._roleDropdown.clearInput();
-                        this._NoPDropdown.clearInput();
                     } else if (event.target.tagName !== 'INPUT' || !event.target.value) {
                         this._dropdownContainer.confirm();
                     }
