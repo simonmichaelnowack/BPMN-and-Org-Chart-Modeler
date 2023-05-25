@@ -61,7 +61,7 @@ export class ModelObjectParser {
             for (let roleModelReference of resource.roles) {
                 rolePlanReferences.push(roles.find(element => element.id === roleModelReference.id));
             }
-            resources.push(new Resource(resource.id, resource.name, rolePlanReferences, parseInt(resource.capacity)));
+            resources.push(new Resource(resource.id, resource.name, rolePlanReferences, getNumber(resource.capacity, 1), getNumber(resource.availabilityStart, 0), getNumber(resource.availabilityEnd, Infinity)));
         }
         return resources
     }
@@ -95,7 +95,7 @@ export class ModelObjectParser {
             }
 
             if (objectiveId === 'start_state') {
-                objectives.push(new Objective(objectiveId, objectiveObjects, objectiveLinks, parseInt(objectiveModeler._definitions.get('rootBoards')[i].objectiveRef?.date)));
+                objectives.push(new Objective(objectiveId, objectiveObjects, objectiveLinks, getNumber(objectiveModeler._definitions.get('rootBoards')[i].objectiveRef?.date, null)));
             } else {
                 let previousObjectiveId = dependencyLinks.find(element => element.targetObjective.id === objectiveId).sourceObjective.id;
                 let index = objectives.findIndex(element => element.id === previousObjectiveId);
@@ -144,10 +144,15 @@ export class ModelObjectParser {
             }
 
             for (let input of inputs) {
-                activities.push(new Activity(activity.name, parseInt(activity.duration) || 0, parseInt(activity.NoP), roles.find(element => element.id === activity.role.id), new IOSet([].concat(input)), new IOSet(outputSet)))
+                activities.push(new Activity(activity.name, getNumber(activity.duration, 0), getNumber(activity.NoP, 1), roles.find(element => element.id === activity.role.id), new IOSet([].concat(input)), new IOSet(outputSet)))
             }
         }
         return activities;
     }
 
+}
+
+function getNumber(value, defaultValue) {
+    let num = parseInt(value, 10)
+    return isNaN(num) ? defaultValue : num;
 }
