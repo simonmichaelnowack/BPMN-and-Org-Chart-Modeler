@@ -15,11 +15,11 @@ export default class FragmentContextPadProvider {
         const {autoPlace, create, elementFactory, translate, popupMenu} = this;
 
         return function (entries) {
-            delete entries["append.end-event"];
-            delete entries["append.text-annotation"];
+            // delete entries["append.end-event"];
+            // delete entries["append.text-annotation"];
 
             if (is(element, 'bpmn:DataObjectReference') && element.type !== 'label') {
-                delete entries['replace'];
+                // delete entries['replace'];
                 let toggleCollectionEntry = popupMenu._getHeaderEntries(element, popupMenu._getProviders('bpmn-replace'))['toggle-is-collection'];
                 let originalAction = toggleCollectionEntry.action;
                 toggleCollectionEntry = Object.assign({}, toggleCollectionEntry);
