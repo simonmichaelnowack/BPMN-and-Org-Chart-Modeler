@@ -96,9 +96,13 @@ PaletteProvider.prototype.getPaletteEntries = function (element) {
             group: 'tools',
             separator: true
         },
-        'create-object': createAction(
-            'rem:Resource', 'od-elements', 'bpmn-icon-od-class',
-            translate('Create object')
+        'create-position-role-object': createAction(
+            'rem:Resource', 'od-elements', 'bpmn-icon-task',
+            translate('Create Position/Role')
+        ),
+        'create-organizational-unit-object': createAction(
+            'rem:Resource', 'od-elements', 'bpmn-icon-transaction',
+            translate('Create Role')
         ),
         'object-linker': {
             group: 'od-elements',

@@ -278,20 +278,21 @@ export default function REMRenderer(
         return str.replace(/[^0-9a-zA-z]+/g, '_');
     }
 
-    function createMarker(id, type, fill, stroke) {
-        var linkEnd = svgCreate('path');
-        svgAttr(linkEnd, {d: 'M 1 5 L 11 10 L 1 15 Z'});
-
+    function createMarker(id, fill, stroke) {
+        var inheritance = svgCreate('path');
+        svgAttr(inheritance, {d: 'M 0 5 L 10 5 Z'}); // Linie von (0,5) nach (10,5)
+    
         addMarker(id, {
-            element: linkEnd,
-            ref: {x: 11, y: 10},
-            scale: 0.5,
+            element: inheritance,
+            ref: {x: 10, y: 5}, // Ändere die Referenzpunkt-Koordinaten entsprechend der Linie
+            scale: 0.8,
             attrs: {
-                fill: stroke,
+                fill: fill,
                 stroke: stroke
             }
         });
     }
+    
 
     this.handlers = {
         'rem:Resource': function (parentGfx, element, attrs) {
@@ -301,11 +302,11 @@ export default function REMRenderer(
                 stroke: getStrokeColor(element, defaultStrokeColor)
             }, attrs));
 
-            addDivider(parentGfx, element);
+            // addDivider(parentGfx, element);
 
             renderTitelLabel(parentGfx, element);
 
-            renderAttributes(parentGfx, element);
+            // renderAttributes(parentGfx, element);
 
             return rect;
         },

@@ -12,16 +12,16 @@ export default class ResourceLabelHandler extends CommandInterceptor {
         this._modeling = modeling;
         this._dropdownContainer = document.createElement('div');
         this._dropdownContainer.classList.add('dd-dropdown-multicontainer');
-        this._nameDropdown = getDropdown("Name");
+        this._nameDropdown = getDropdown("Role/Position");
         this._dropdownContainer.appendChild(this._nameDropdown);
-        this._rolesDropdown = getDropdown("Roles");
-        this._dropdownContainer.appendChild(this._rolesDropdown);
-        this._capacityDropdown = getDropdown("Capacity");
-        this._dropdownContainer.appendChild(this._capacityDropdown);
-        this._availabilityStartDropdown = getDropdown("Availability Start");
-        this._dropdownContainer.appendChild(this._availabilityStartDropdown);
-        this._availabilityEndDropdown = getDropdown("Availability End");
-        this._dropdownContainer.appendChild(this._availabilityEndDropdown);
+        // this._rolesDropdown = getDropdown("Roles");
+        // this._dropdownContainer.appendChild(this._rolesDropdown);
+        // this._capacityDropdown = getDropdown("Capacity");
+        // this._dropdownContainer.appendChild(this._capacityDropdown);
+        // this._availabilityStartDropdown = getDropdown("Availability Start");
+        // this._dropdownContainer.appendChild(this._availabilityStartDropdown);
+        // this._availabilityEndDropdown = getDropdown("Availability End");
+        // this._dropdownContainer.appendChild(this._availabilityEndDropdown);
         this._currentDropdownTarget = undefined;
         this._overlayId = undefined;
         this._overlays = overlays;
@@ -53,83 +53,83 @@ export default class ResourceLabelHandler extends CommandInterceptor {
                     this._nameDropdown.addCreateElementInput(event => this._dropdownContainer.confirm(), "text", resource.name);
                 }
 
-                const populateCapacityDropdown = () => {
-                    this._capacityDropdown.populate(
-                        [],
-                        () => {
-                        },
-                        element
-                    );
-                    this._capacityDropdown.addCreateElementInput(event => this._dropdownContainer.confirm(), "number", resource.capacity);
-                }
+                // const populateCapacityDropdown = () => {
+                //     this._capacityDropdown.populate(
+                //         [],
+                //         () => {
+                //         },
+                //         element
+                //     );
+                //     this._capacityDropdown.addCreateElementInput(event => this._dropdownContainer.confirm(), "number", resource.capacity);
+                // }
 
-                const populateRolesDropdown = () => {
-                    this._rolesDropdown.populate(
-                        this._resourceModeler._roles || [], // TODO Change this to the list of roles instead of an empty list
-                        (role, element) => {
-                            this.updateRoles(role, element);
-                            updateRolesSelection();
-                        },
-                        element
-                    );
-                    this._rolesDropdown.addCreateElementInput(event => this._dropdownContainer.confirm());
-                    updateRolesSelection();
-                }
+                // const populateRolesDropdown = () => {
+                //     this._rolesDropdown.populate(
+                //         this._resourceModeler._roles || [], // TODO Change this to the list of roles instead of an empty list
+                //         (role, element) => {
+                //             this.updateRoles(role, element);
+                //             updateRolesSelection();
+                //         },
+                //         element
+                //     );
+                //     this._rolesDropdown.addCreateElementInput(event => this._dropdownContainer.confirm());
+                //     updateRolesSelection();
+                // }
 
-                const populateAvailabilityStartDropdown = () => {
-                    this._availabilityStartDropdown.populate(
-                        [],
-                        () => {
-                        },
-                        element
-                    );
-                    this._availabilityStartDropdown.addCreateElementInput(event => this._dropdownContainer.confirm(), "number", resource.availabilityStart, "0");
-                }
+                // const populateAvailabilityStartDropdown = () => {
+                //     this._availabilityStartDropdown.populate(
+                //         [],
+                //         () => {
+                //         },
+                //         element
+                //     );
+                //     this._availabilityStartDropdown.addCreateElementInput(event => this._dropdownContainer.confirm(), "number", resource.availabilityStart, "0");
+                // }
 
-                const populateAvailabilityEndDropdown = () => {
-                    this._availabilityEndDropdown.populate(
-                        [],
-                        () => {
-                        },
-                        element
-                    );
-                    this._availabilityEndDropdown.addCreateElementInput(event => this._dropdownContainer.confirm(), "number", resource.availabilityEnd, "0");
-                }
+                // const populateAvailabilityEndDropdown = () => {
+                //     this._availabilityEndDropdown.populate(
+                //         [],
+                //         () => {
+                //         },
+                //         element
+                //     );
+                //     this._availabilityEndDropdown.addCreateElementInput(event => this._dropdownContainer.confirm(), "number", resource.availabilityEnd, "0");
+                // }
 
                 populateNameDropdown();
-                populateCapacityDropdown();
-                populateRolesDropdown();
-                populateAvailabilityStartDropdown();
-                populateAvailabilityEndDropdown();
+                // populateCapacityDropdown();
+                // populateRolesDropdown();
+                // populateAvailabilityStartDropdown();
+                // populateAvailabilityEndDropdown();
 
                 this._dropdownContainer.confirm = (event) => {
                     const newNameInput = this._nameDropdown.getInputValue().trim();
-                    const newCapacityInput = this._capacityDropdown.getInputValue().trim();
-                    const newRoleInput = this._rolesDropdown.getInputValue().trim();
-                    const newAvailabilityStartInput = this._availabilityStartDropdown.getInputValue().trim();
-                    const newAvailabilityEndInput = this._availabilityEndDropdown.getInputValue().trim();
+                    // const newCapacityInput = this._capacityDropdown.getInputValue().trim();
+                    // const newRoleInput = this._rolesDropdown.getInputValue().trim();
+                    // const newAvailabilityStartInput = this._availabilityStartDropdown.getInputValue().trim();
+                    // const newAvailabilityEndInput = this._availabilityEndDropdown.getInputValue().trim();
 
                     if (newNameInput !== '' && newNameInput !== resource.name) {
                         this.updateName(newNameInput, element);
                         populateNameDropdown();
                     }
-                    if (newCapacityInput !== resource.capacity && newCapacityInput > 0) {
-                        this.updateCapacity(newCapacityInput, element);
-                        populateCapacityDropdown();
-                    }
-                    if (newRoleInput !== '' && !this._resourceModeler._roles?.find(role => role.name === newRoleInput)) {
-                        let newRole = this.createRole(newRoleInput);
-                        this.updateRoles(newRole, element);
-                        populateRolesDropdown();
-                    }
-                    if (newAvailabilityStartInput !== resource.availabilityStart && newAvailabilityStartInput >= 0) {
-                        this.updateavailabilityStart(newAvailabilityStartInput, element);
-                        populateAvailabilityStartDropdown();
-                    }
-                    if (newAvailabilityEndInput !== resource.availabilityEnd && newAvailabilityEndInput >= 0) {
-                        this.updateavailabilityEnd(newAvailabilityEndInput, element);
-                        populateAvailabilityEndDropdown();
-                    }
+                    // if (newCapacityInput !== resource.capacity && newCapacityInput > 0) {
+                    //     this.updateCapacity(newCapacityInput, element);
+                    //     populateCapacityDropdown();
+                    // }
+                    // if (newRoleInput !== '' && !this._resourceModeler._roles?.find(role => role.name === newRoleInput)) {
+                    //     let newRole = this.createRole(newRoleInput);
+                    //     this.updateRoles(newRole, element);
+                    //     populateRolesDropdown();
+                    // }
+                    // if (newAvailabilityStartInput !== resource.availabilityStart && newAvailabilityStartInput >= 0) {
+                    //     this.updateavailabilityStart(newAvailabilityStartInput, element);
+                    //     populateAvailabilityStartDropdown();
+                    // }
+                    // if (newAvailabilityEndInput !== resource.availabilityEnd && newAvailabilityEndInput >= 0) {
+                    //     this.updateavailabilityEnd(newAvailabilityEndInput, element);
+                    //     populateAvailabilityEndDropdown();
+                    // }
                 }
 
                 let shouldBlockNextClick = e.type === 'create.end';
@@ -186,45 +186,45 @@ export default class ResourceLabelHandler extends CommandInterceptor {
         });
     }
 
-    updateCapacity(newCapacity, element) {
-        element.businessObject.capacity = newCapacity;
-        this._eventBus.fire('element.changed', {
-            element
-        });
-    }
+    // updateCapacity(newCapacity, element) {
+    //     element.businessObject.capacity = newCapacity;
+    //     this._eventBus.fire('element.changed', {
+    //         element
+    //     });
+    // }
 
-    createRole(name) {
-        return this._eventBus.fire(CommonEvents.ROLE_CREATION_REQUESTED, {
-            name
-        });
-    }
+    // createRole(name) {
+    //     return this._eventBus.fire(CommonEvents.ROLE_CREATION_REQUESTED, {
+    //         name
+    //     });
+    // }
 
-    updateRoles(newRole, element) {
-        if ((element.businessObject.roles?.find(role => role === newRole))) {
-            element.businessObject.roles = without(element.businessObject.roles, newRole);
-        } else if (element.businessObject.roles) {
-            element.businessObject.roles.push(newRole);
-        } else {
-            element.businessObject.roles = [newRole];
-        }
-        this._eventBus.fire('element.changed', {
-            element
-        });
-    }
+    // updateRoles(newRole, element) {
+    //     if ((element.businessObject.roles?.find(role => role === newRole))) {
+    //         element.businessObject.roles = without(element.businessObject.roles, newRole);
+    //     } else if (element.businessObject.roles) {
+    //         element.businessObject.roles.push(newRole);
+    //     } else {
+    //         element.businessObject.roles = [newRole];
+    //     }
+    //     this._eventBus.fire('element.changed', {
+    //         element
+    //     });
+    // }
 
-    updateavailabilityStart(newAvailabilityStart, element) {
-        element.businessObject.availabilityStart = newAvailabilityStart;
-        this._eventBus.fire('element.changed', {
-            element
-        });
-    }
+    // updateavailabilityStart(newAvailabilityStart, element) {
+    //     element.businessObject.availabilityStart = newAvailabilityStart;
+    //     this._eventBus.fire('element.changed', {
+    //         element
+    //     });
+    // }
 
-    updateavailabilityEnd(newAvailabilityEnd, element) {
-        element.businessObject.availabilityEnd = newAvailabilityEnd;
-        this._eventBus.fire('element.changed', {
-            element
-        });
-    }
+    // updateavailabilityEnd(newAvailabilityEnd, element) {
+    //     element.businessObject.availabilityEnd = newAvailabilityEnd;
+    //     this._eventBus.fire('element.changed', {
+    //         element
+    //     });
+    // }
 }
 
 ResourceLabelHandler.$inject = [
