@@ -82,9 +82,15 @@ ContextPadProvider.prototype.getContextPadEntries = function (element) {
   }
 
   createDeleteEntry(actions);
-  createLinkNewPosition(actions);
-  createLinkNewOrganizationalUnit(actions);
-  createLinkObjectsEntry(actions);
+  if (
+    element.type === "rom:Position" ||
+    element.type === "rom:OrganizationalUnit"
+  ) {
+    // Only add specific entries for these types
+    createLinkNewPosition(actions);
+    createLinkNewOrganizationalUnit(actions);
+    createLinkObjectsEntry(actions);
+  }
 
   return actions;
 

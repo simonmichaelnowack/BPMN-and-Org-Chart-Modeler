@@ -43,7 +43,7 @@ export default function ObjectConnectSnapping(eventBus) {
         snapToShape(event, hover, getTargetBoundsPadding());
       }
 
-      if (hover && isAnyType(canExecute, ["rom:Inheritance"])) {
+      if (hover && isAnyType(canExecute, ["rom:Link"])) {
         context.connectionStart = mid(start);
 
         // snap hover
