@@ -128,9 +128,9 @@ RoleModeler.prototype.rank = 10;
 
 RemModeler.prototype.name = function (constructionMode) {
   if (constructionMode) {
-    return "Organizational Chart";
+    return "Resource Model";
   } else {
-    return "Organizational Chart";
+    return "Resource Model";
   }
 };
 
@@ -141,6 +141,10 @@ RemModeler.prototype.deleteResource = function (resource) {
 RemModeler.prototype.handleRoleListChanged = function (roles, dryRun = false) {
   this._roles = roles;
 };
+
+// RemModeler.prototype.handleUnitListChanged = function (units, dryRun = false) {
+//   this._units = units;
+// };
 
 RemModeler.prototype.handleRoleRenamed = function (role) {
   this.getResourcesWithRole(role).forEach((element) => {
@@ -159,20 +163,37 @@ RemModeler.prototype.handleRoleDeleted = function (role) {
   });
 };
 
+// RemModeler.prototype.handleUnitRenamed = function (unit) {
+//   this.getResourcesWithUnit(unit).forEach((element) => {
+//     this.get("eventBus").fire("element.changed", {
+//       element,
+//     });
+//   });
+// };
+
+// RemModeler.prototype.handleUnitDeleted = function (unit) {
+//   this.getResourcesWithUnit(unit).forEach((element, gfx) => {
+//     element.businessObject.units = without(element.businessObject.units, unit);
+//     this.get("eventBus").fire("element.changed", {
+//       element,
+//     });
+//   });
+// };
+
 RemModeler.prototype.getResourcesWithRole = function (role) {
   return this.get("elementRegistry").filter(
     (element) =>
-      is(element, "rem:Position") &&
+      is(element, "rem:Resource") &&
       role.id &&
       element.businessObject.roles?.find((ele) => ele.id === role.id)
   );
 };
 
-RemModeler.prototype.getResourcesWithRole2 = function (role) {
-  return this.get("elementRegistry").filter(
-    (element) =>
-      is(element, "rem:OrganizationalUnit") &&
-      role.id &&
-      element.businessObject.roles?.find((ele) => ele.id === role.id)
-  );
-};
+// RemModeler.prototype.getResourcesWithUnit = function (unit) {
+//   return this.get("elementRegistry").filter(
+//     (element =
+//       is(element, "rom:OrganizationalUnit") &&
+//       unit.id &&
+//       element.businessObject.units.find((ele = ele.id === unit.id)))
+//   );
+// };

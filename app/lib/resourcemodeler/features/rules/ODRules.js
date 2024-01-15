@@ -1,119 +1,129 @@
-import { every } from "min-dash";
+import {every} from 'min-dash';
 
-import inherits from "inherits";
+import inherits from 'inherits';
 
-import { is } from "../../../common/util/ModelUtil";
+import {is} from '../../../common/util/ModelUtil';
 
-import { isLabel } from "../../util/LabelUtil";
+import {isLabel} from '../../util/LabelUtil';
 
-import RuleProvider from "diagram-js/lib/features/rules/RuleProvider";
-import { isAny } from "../../../common/features/modeling/ModelingUtil";
+import RuleProvider from 'diagram-js/lib/features/rules/RuleProvider';
+import {isAny} from '../../../common/features/modeling/ModelingUtil';
+
 
 /**
  * OD specific modeling rule
  */
 export default function ODRules(eventBus) {
-  RuleProvider.call(this, eventBus);
+    RuleProvider.call(this, eventBus);
 }
 
 inherits(ODRules, RuleProvider);
 
-ODRules.$inject = ["eventBus"];
+ODRules.$inject = ['eventBus'];
 
 ODRules.prototype.init = function () {
-  this.addRule("connection.start", function (context) {
-    var source = context.source;
 
-    return canStartConnection(source);
-  });
+    this.addRule('connection.start', function (context) {
+        var source = context.source;
 
-  this.addRule("connection.create", function (context) {
-    var source = context.source,
-      target = context.target,
-      hints = context.hints || {},
-      targetParent = hints.targetParent;
-
-    // temporarily set target parent for scoping
-    // checks to work
-    if (targetParent) {
-      target.parent = targetParent;
-    }
-
-    try {
-      return canConnect(source, target);
-    } finally {
-      // unset temporary target parent
-      if (targetParent) {
-        target.parent = null;
-      }
-    }
-  });
-
-  this.addRule("connection.reconnect", function (context) {
-    var connection = context.connection,
-      source = context.source,
-      target = context.target;
-
-    return canConnect(source, target, connection);
-  });
-
-  this.addRule("connection.updateWaypoints", function (context) {
-    return {
-      type: context.connection.type,
-    };
-  });
-
-  this.addRule("shape.resize", function (context) {
-    var shape = context.shape,
-      newBounds = context.newBounds;
-
-    return canResize(shape, newBounds);
-  });
-
-  this.addRule("elements.create", function (context) {
-    var elements = context.elements,
-      position = context.position,
-      target = context.target;
-
-    return every(elements, function (element) {
-      if (element.host) {
-        return canAttach(element, element.host, null, position);
-      }
-
-      return canCreate(element, target, null, position);
+        return canStartConnection(source);
     });
-  });
 
-  this.addRule("elements.move", function (context) {
-    var target = context.target,
-      shapes = context.shapes,
-      position = context.position;
+    this.addRule('connection.create', function (context) {
+        var source = context.source,
+            target = context.target,
+            hints = context.hints || {},
+            targetParent = hints.targetParent;
 
-    return (
-      canAttach(shapes, target, null, position) ||
-      canMove(shapes, target, position)
-    );
-  });
+        // temporarily set target parent for scoping
+        // checks to work
+        if (targetParent) {
+            target.parent = targetParent;
+        }
 
-  this.addRule("shape.create", function (context) {
-    return canCreate(
-      context.shape,
-      context.target,
-      context.source,
-      context.position
-    );
-  });
+        try {
+            return canConnect(source, target);
+        } finally {
 
-  this.addRule("shape.attach", function (context) {
-    return canAttach(context.shape, context.target, null, context.position);
-  });
+            // unset temporary target parent
+            if (targetParent) {
+                target.parent = null;
+            }
+        }
+    });
 
-  this.addRule("element.copy", function (context) {
-    var element = context.element,
-      elements = context.elements;
+    this.addRule('connection.reconnect', function (context) {
 
-    return canCopy(elements, element);
-  });
+        var connection = context.connection,
+            source = context.source,
+            target = context.target;
+
+        return canConnect(source, target, connection);
+    });
+
+    this.addRule('connection.updateWaypoints', function (context) {
+        return {
+            type: context.connection.type
+        };
+    });
+
+    this.addRule('shape.resize', function (context) {
+
+        var shape = context.shape,
+            newBounds = context.newBounds;
+
+        return canResize(shape, newBounds);
+    });
+
+    this.addRule('elements.create', function (context) {
+        var elements = context.elements,
+            position = context.position,
+            target = context.target;
+
+        return every(elements, function (element) {
+            if (element.host) {
+                return canAttach(element, element.host, null, position);
+            }
+
+            return canCreate(element, target, null, position);
+        });
+    });
+
+    this.addRule('elements.move', function (context) {
+
+        var target = context.target,
+            shapes = context.shapes,
+            position = context.position;
+
+        return canAttach(shapes, target, null, position) ||
+            canMove(shapes, target, position);
+    });
+
+    this.addRule('shape.create', function (context) {
+        return canCreate(
+            context.shape,
+            context.target,
+            context.source,
+            context.position
+        );
+    });
+
+    this.addRule('shape.attach', function (context) {
+
+        return canAttach(
+            context.shape,
+            context.target,
+            null,
+            context.position
+        );
+    });
+
+    this.addRule('element.copy', function (context) {
+        var element = context.element,
+            elements = context.elements;
+
+        return canCopy(elements, element);
+    });
 };
 
 ODRules.prototype.canConnect = canConnect;
@@ -137,30 +147,31 @@ ODRules.prototype.canCopy = canCopy;
  */
 
 function isSame(a, b) {
-  return a === b;
+    return a === b;
 }
 
 function getParents(element) {
-  var parents = [];
 
-  while (element) {
-    element = element.parent;
+    var parents = [];
 
-    if (element) {
-      parents.push(element);
+    while (element) {
+        element = element.parent;
+
+        if (element) {
+            parents.push(element);
+        }
     }
-  }
 
-  return parents;
+    return parents;
 }
 
 function isParent(possibleParent, element) {
-  var allParents = getParents(element);
-  return allParents.indexOf(possibleParent) !== -1;
+    var allParents = getParents(element);
+    return allParents.indexOf(possibleParent) !== -1;
 }
 
 function isGroup(element) {
-  return is(element, "rem:Group") && !element.labelTarget;
+    return is(element, 'rem:Group') && !element.labelTarget;
 }
 
 /**
@@ -170,32 +181,32 @@ function isGroup(element) {
  * @return {boolean}
  */
 function canStartConnection(element) {
-  if (nonExistingOrLabel(element)) {
-    return null;
-  }
+    if (nonExistingOrLabel(element)) {
+        return null;
+    }
 
-  return is(element, "rem:Position") && is(element, "rem:OrganizationalUnit");
+    return is(element,
+        'rem:Resource'
+    );
 }
 
 function nonExistingOrLabel(element) {
-  return !element || isLabel(element);
+    return !element || isLabel(element);
 }
 
+
 function canConnect(source, target) {
-  if (nonExistingOrLabel(source) || nonExistingOrLabel(target)) {
-    return null;
-  }
-  if (canConnectLink(source, target)) {
-    return { type: "rem:Link" };
-  }
-  return false;
+    if (nonExistingOrLabel(source) || nonExistingOrLabel(target)) {
+        return null;
+    }
+    if (canConnectLink(source, target)) {
+        return {type: 'rem:Link'};
+    }
+    return false;
 }
 
 function canConnectLink(source, target) {
-  return (
-    (is(source, "rem:Position") || is(source, "rem:OrganizationalUnit")) &&
-    (is(target, "rem:Position") || is(target, "rem:OrganizationalUnit"))
-  );
+    return is(source, 'rem:Resource') && is(target, 'rem:Resource');
 }
 
 /**
@@ -204,83 +215,89 @@ function canConnectLink(source, target) {
  * @return {Boolean}
  */
 function canDrop(element, target) {
-  // can move labels
-  if (isLabel(element) || isGroup(element)) {
-    return true;
-  }
 
-  // drop board elements onto boards
-  return is(element, "rem:BoardElement") && is(target, "rem:OdBoard");
+    // can move labels
+    if (isLabel(element) || isGroup(element)) {
+        return true;
+    }
+
+    // drop board elements onto boards
+    return is(element, 'rem:BoardElement') && is(target, 'rem:OdBoard');
 }
 
 function canReplace(elements, target) {
-  return target;
+    return target;
 }
+
 
 function canAttach(elements, target) {
-  if (!Array.isArray(elements)) {
-    elements = [elements];
-  }
 
-  // only (re-)attach one element at a time
-  if (elements.length !== 1) {
-    return false;
-  }
+    if (!Array.isArray(elements)) {
+        elements = [elements];
+    }
 
-  var element = elements[0];
+    // only (re-)attach one element at a time
+    if (elements.length !== 1) {
+        return false;
+    }
 
-  // do not attach labels
-  if (isLabel(element)) {
-    return false;
-  }
+    var element = elements[0];
 
-  if (is(target, "rem:BoardElement")) {
-    return false;
-  }
+    // do not attach labels
+    if (isLabel(element)) {
+        return false;
+    }
 
-  return "attach";
+    if (is(target, 'rem:BoardElement')) {
+        return false;
+    }
+
+    return 'attach';
 }
 
-function canMove(elements, target) {
-  // allow default move check to start move operation
-  if (!target) {
-    return true;
-  }
 
-  return elements.every(function (element) {
-    return canDrop(element, target);
-  });
+function canMove(elements, target) {
+
+    // allow default move check to start move operation
+    if (!target) {
+        return true;
+    }
+
+    return elements.every(function (element) {
+        return canDrop(element, target);
+    });
 }
 
 function canCreate(shape, target, source, position) {
-  if (!target) {
-    return false;
-  }
 
-  if (isLabel(shape) || isGroup(shape)) {
-    return true;
-  }
+    if (!target) {
+        return false;
+    }
 
-  if (isSame(source, target)) {
-    return false;
-  }
+    if (isLabel(shape) || isGroup(shape)) {
+        return true;
+    }
 
-  // ensure we do not drop the element
-  // into source
-  if (source && isParent(source, target)) {
-    return false;
-  }
+    if (isSame(source, target)) {
+        return false;
+    }
 
-  return canDrop(shape, target, position);
+    // ensure we do not drop the element
+    // into source
+    if (source && isParent(source, target)) {
+        return false;
+    }
+
+    return canDrop(shape, target, position);
 }
 
 function canResize(shape, newBounds) {
-  if (isAny(shape, ["rem:Position", "rem:OrganizationalUnit"])) {
-    return !newBounds || (newBounds.width >= 50 && newBounds.height >= 50);
-  }
-  return false;
+    if (isAny(shape, ['rem:Resource'])) {
+        return !newBounds || (newBounds.width >= 50 && newBounds.height >= 50);
+    }
+    return false;
 }
 
 function canCopy(elements, element) {
-  return true;
+    return true;
 }

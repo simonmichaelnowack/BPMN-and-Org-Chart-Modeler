@@ -1,10 +1,11 @@
-import inherits from "inherits";
+import inherits from 'inherits';
 
-import OrderingProvider from "diagram-js/lib/features/ordering/OrderingProvider";
+import OrderingProvider from 'diagram-js/lib/features/ordering/OrderingProvider';
 
-import { isAny } from "../../../common/features/modeling/ModelingUtil";
+import {isAny} from '../../../common/features/modeling/ModelingUtil';
 
-import { find, findIndex } from "min-dash";
+import {find, findIndex} from 'min-dash';
+
 
 /**
  * a simple ordering provider that makes sure:
@@ -13,108 +14,119 @@ import { find, findIndex } from "min-dash";
  * (1) elements are ordered by a {level} property
  */
 export default function ODOrderingProvider(eventBus, canvas, translate) {
-  OrderingProvider.call(this, eventBus);
 
-  var orders = [
-    { type: "rem:Position", order: { level: 5 } },
-    { type: "rem:OrganizationalUnit", order: { level: 5 } },
-    { type: "rem:Link", order: { level: 3 } },
-  ];
+    OrderingProvider.call(this, eventBus);
 
-  function computeOrder(element) {
-    if (element.labelTarget) {
-      return { level: 10 };
+    var orders = [
+        {type: 'rem:Resource', order: {level: 5}},
+        {
+            type: 'rem:Link',
+            order: {
+                level: 3,
+            }
+        },
+    ];
+
+    function computeOrder(element) {
+        if (element.labelTarget) {
+            return {level: 10};
+        }
+
+        var entry = find(orders, function (o) {
+            return isAny(element, [o.type]);
+        });
+
+        return entry && entry.order || {level: 1};
     }
 
-    var entry = find(orders, function (o) {
-      return isAny(element, [o.type]);
-    });
+    function getOrder(element) {
 
-    return (entry && entry.order) || { level: 1 };
-  }
+        var order = element.order;
 
-  function getOrder(element) {
-    var order = element.order;
+        if (!order) {
+            element.order = order = computeOrder(element);
+        }
 
-    if (!order) {
-      element.order = order = computeOrder(element);
+        if (!order) {
+            throw new Error('no order for <' + element.id + '>');
+        }
+
+        return order;
     }
 
-    if (!order) {
-      throw new Error("no order for <" + element.id + ">");
+    function findActualParent(element, newParent, containers) {
+
+        var actualParent = newParent;
+
+        while (actualParent) {
+
+            if (isAny(actualParent, containers)) {
+                break;
+            }
+
+            actualParent = actualParent.parent;
+        }
+
+        if (!actualParent) {
+            throw new Error(translate('no parent for {element} in {parent}', {
+                element: element.id,
+                parent: newParent.id
+            }));
+        }
+
+        return actualParent;
     }
 
-    return order;
-  }
+    this.getOrdering = function (element, newParent) {
 
-  function findActualParent(element, newParent, containers) {
-    var actualParent = newParent;
+        // render labels always on top
+        if (element.labelTarget) {
+            return {
+                parent: canvas.getRootElement(),
+                index: -1
+            };
+        }
 
-    while (actualParent) {
-      if (isAny(actualParent, containers)) {
-        break;
-      }
+        var elementOrder = getOrder(element);
 
-      actualParent = actualParent.parent;
-    }
 
-    if (!actualParent) {
-      throw new Error(
-        translate("no parent for {element} in {parent}", {
-          element: element.id,
-          parent: newParent.id,
-        })
-      );
-    }
+        if (elementOrder.containers) {
+            newParent = findActualParent(element, newParent, elementOrder.containers);
+        }
 
-    return actualParent;
-  }
 
-  this.getOrdering = function (element, newParent) {
-    // render labels always on top
-    if (element.labelTarget) {
-      return {
-        parent: canvas.getRootElement(),
-        index: -1,
-      };
-    }
+        var currentIndex = newParent.children.indexOf(element);
 
-    var elementOrder = getOrder(element);
+        var insertIndex = findIndex(newParent.children, function (child) {
 
-    if (elementOrder.containers) {
-      newParent = findActualParent(element, newParent, elementOrder.containers);
-    }
+            // do not compare with labels, they are created
+            // in the wrong order (right after elements) during import and
+            // mess up the positioning.
+            if (!element.labelTarget && child.labelTarget) {
+                return false;
+            }
 
-    var currentIndex = newParent.children.indexOf(element);
+            return elementOrder.level < getOrder(child).level;
+        });
 
-    var insertIndex = findIndex(newParent.children, function (child) {
-      // do not compare with labels, they are created
-      // in the wrong order (right after elements) during import and
-      // mess up the positioning.
-      if (!element.labelTarget && child.labelTarget) {
-        return false;
-      }
 
-      return elementOrder.level < getOrder(child).level;
-    });
+        // if the element is already in the child list at
+        // a smaller index, we need to adjust the insert index.
+        // this takes into account that the element is being removed
+        // before being re-inserted
+        if (insertIndex !== -1) {
+            if (currentIndex !== -1 && currentIndex < insertIndex) {
+                insertIndex -= 1;
+            }
+        }
 
-    // if the element is already in the child list at
-    // a smaller index, we need to adjust the insert index.
-    // this takes into account that the element is being removed
-    // before being re-inserted
-    if (insertIndex !== -1) {
-      if (currentIndex !== -1 && currentIndex < insertIndex) {
-        insertIndex -= 1;
-      }
-    }
-
-    return {
-      index: insertIndex,
-      parent: newParent,
+        return {
+            index: insertIndex,
+            parent: newParent
+        };
     };
-  };
 }
 
-ODOrderingProvider.$inject = ["eventBus", "canvas", "translate"];
+ODOrderingProvider.$inject = ['eventBus', 'canvas', 'translate'];
 
 inherits(ODOrderingProvider, OrderingProvider);

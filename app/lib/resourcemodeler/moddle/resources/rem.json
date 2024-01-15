@@ -1,5 +1,5 @@
 {
-  "name": "Organizational Chart",
+  "name": "Resource Model",
   "uri": "http://tk/schema/od",
   "prefix": "rem",
   "xml": {
@@ -24,42 +24,7 @@
       ]
     },
     {
-      "name": "Position",
-      "superClass": [
-        "BoardElement"
-      ],
-      "properties": [
-        {
-          "name": "links",
-          "isMany": true,
-          "type": "Link",
-          "isReference": true
-        },
-        {
-          "name": "capacity",
-          "isAttr": true,
-          "type": "Integer"
-        },
-        {
-          "name": "roles",
-          "isMany": true,
-          "type": "rom:Role",
-          "isReference": true
-        },
-        {
-          "name": "availabilityStart",
-          "isAttr": true,
-          "type": "Integer"
-        },
-        {
-          "name": "availabilityEnd",
-          "isAttr": true,
-          "type": "Integer"
-        }
-      ]
-    },
-    {
-      "name": "OrganizationalUnit",
+      "name": "Resource",
       "superClass": [
         "BoardElement"
       ],
@@ -95,7 +60,9 @@
     },
     {
       "name": "Link",
-      "superClass": ["BoardElement"],
+      "superClass": [
+        "BoardElement"
+      ],
       "properties": [
         {
           "name": "type",
@@ -109,22 +76,10 @@
           "type": "Resource"
         },
         {
-          "name": "sourceOrganizationalUnitRef",
-          "isAttr": true,
-          "isReference": true,
-          "type": "OrganizationalUnit"
-        },
-        {
           "name": "targetRef",
           "isAttr": true,
           "isReference": true,
           "type": "Resource"
-        },
-        {
-          "name": "targetOrganizationalUnitRef",
-          "isAttr": true,
-          "isReference": true,
-          "type": "OrganizationalUnit"
         }
       ]
     },
