@@ -7,7 +7,7 @@ import { without } from "min-dash";
 import { is } from "../../util/Util";
 
 export default class TaskLabelHandler extends CommandInterceptor {
-  constructor(eventBus, modeling, directEditing, overlays, resourceModeler) {
+  constructor(eventBus, modeling, directEditing, overlays, fragmentModeler) {
     super(eventBus);
     this._eventBus = eventBus;
     this._modeling = modeling;
@@ -22,7 +22,7 @@ export default class TaskLabelHandler extends CommandInterceptor {
     this._currentDropdownTarget = undefined;
     this._overlayId = undefined;
     this._overlays = overlays;
-    this._resourceModeler = resourceModeler;
+    this._fragmentModeler = fragmentModeler;
 
     eventBus.on("directEditing.activate", function (e) {
       if (is(e.active.element, "bpmn:Participant")) {
@@ -36,137 +36,57 @@ export default class TaskLabelHandler extends CommandInterceptor {
     eventBus.on(["element.dblclick", "create.end", "autoPlace.end"], (e) => {
       const element = e.element || e.shape || e.elements[0];
       if (is(element, "bpmn:Participant")) {
-        const resource = element.businessObject;
+        const activity = element.businessObject;
         this._dropdownContainer.currentElement = element;
 
         const updateRolesSelection = () => {
-          // Clear selection for all entries
           this._rolesDropdown
             .getEntries()
-            .forEach((entry) => entry.setSelected(false));
-
-          // Set selected for the last entered role
-          const lastRole =
-            resource.roles && resource.roles.length > 0
-              ? resource.roles[resource.roles.length - 1]
-              : null;
-          if (lastRole) {
-            const selectedEntry = this._rolesDropdown
-              .getEntries()
-              .find((entry) => entry.option === lastRole);
-            if (selectedEntry) {
-              selectedEntry.setSelected(true);
-            }
-          }
+            .forEach((entry) =>
+              entry.setSelected(activity.roles === entry.option)
+            );
         };
 
         const updateUnitsSelection = () => {
           this._unitsDropdown
             .getEntries()
             .forEach((entry) =>
-              entry.setSelected(
-                resource.units?.find((unit) => unit === entry.option)
-              )
+              entry.setSelected(activity.units === entry.option)
             );
         };
 
-        const populateDropdown = (
-          dropdown,
-          items,
-          updateFunction,
-          updateSelectionFunction
-        ) => {
-          const newestItem = items.length > 0 ? items[items.length - 1] : null;
-
-          dropdown.populate(
-            items,
-            (item, element) => {
-              updateFunction(item, element);
-              updateSelectionFunction();
+        const populateRolesDropdown = () => {
+          this._rolesDropdown.populate(
+            this._fragmentModeler._roles || [],
+            (roles, element) => {
+              this.updateRoles(roles, element);
+              if (element.businessObject.roles === undefined) {
+              }
+              updateRolesSelection();
             },
             element
           );
-
-          dropdown.getEntries().forEach((entry) => {
-            entry.addEventListener("click", (event) => {
-              const selectedItem = entry.option;
-
-              // Clear selection for all entries in both dropdowns
-              this._rolesDropdown.getEntries().forEach((roleEntry) => {
-                roleEntry.setSelected(false);
-              });
-
-              this._unitsDropdown.getEntries().forEach((unitEntry) => {
-                unitEntry.setSelected(false);
-              });
-
-              // Update the function for the clicked dropdown
-              if (dropdown === this._rolesDropdown) {
-                this.updateRoles(selectedItem, element);
-                updateRolesSelection();
-                // Clear selection in Units dropdown
-                this._unitsDropdown.getEntries().forEach((unitEntry) => {
-                  unitEntry.setSelected(false);
-                });
-                // Set selected for the clicked entry in Units dropdown
-                entry.setSelected(true);
-              } else if (dropdown === this._unitsDropdown) {
-                this.updateUnits(selectedItem, element);
-                updateUnitsSelection();
-                // Clear selection in Roles dropdown
-                this._rolesDropdown.getEntries().forEach((roleEntry) => {
-                  roleEntry.setSelected(false);
-                });
-
-                // Set selected for the clicked entry in Units dropdown
-                entry.setSelected(true);
-              }
-
-              this._dropdownContainer.confirm();
-            });
-          });
-
-          dropdown.addCreateElementInput((event) =>
+          this._rolesDropdown.addCreateElementInput((event) =>
             this._dropdownContainer.confirm()
           );
-
-          // Set selected state for the newest item
-          const newestEntry = dropdown
-            .getEntries()
-            .find((entry) => entry.option === newestItem);
-          if (newestEntry) {
-            newestEntry.setSelected(true);
-          }
-
-          updateSelectionFunction();
-        };
-
-        const populateRolesDropdown = () => {
-          const roles = this._resourceModeler._roles || [];
-          populateDropdown(
-            this._rolesDropdown,
-            roles,
-            (role, element) => {
-              this.updateRoles(role, element);
-            },
-            () => {
-              updateRolesSelection();
-            }
-          );
+          updateRolesSelection();
         };
 
         const populateUnitsDropdown = () => {
-          const units = this._resourceModeler._units || [];
-          populateDropdown(
-            this._unitsDropdown,
-            units,
-            (unit, element) => {
-              this.updateUnits(unit, element);
-            },
-            () => {
+          this._unitsDropdown.populate(
+            this._fragmentModeler._units || [],
+            (units, element) => {
+              this.updateUnits(units, element);
+              if (element.businessObject.units === undefined) {
+              }
               updateUnitsSelection();
-            }
+            },
+            element
           );
+          this._unitsDropdown.addCreateElementInput((event) =>
+            this._dropdownContainer.confirm()
+          );
+          updateUnitsSelection();
         };
 
         populateRolesDropdown();
@@ -174,46 +94,20 @@ export default class TaskLabelHandler extends CommandInterceptor {
 
         this._dropdownContainer.confirm = (event) => {
           const newRoleInput = this._rolesDropdown.getInputValue().trim();
+          const newUnitInput = this._unitsDropdown.getInputValue().trim();
 
-          if (
-            newRoleInput !== "" &&
-            !this._resourceModeler._roles?.find(
-              (role) => role.name === newRoleInput
-            )
-          ) {
+          if (newRoleInput !== "" && newRoleInput !== activity.roles) {
             let newRole = this.createRole(newRoleInput);
             this.updateRoles(newRole, element);
             populateRolesDropdown();
           }
 
-          const newUnitInput = this._unitsDropdown.getInputValue().trim();
-
-          if (
-            newUnitInput !== "" &&
-            !this._resourceModeler._units?.find(
-              (unit) => unit.name === newUnitInput
-            )
-          ) {
+          if (newUnitInput !== "" && newUnitInput !== activity.units) {
             let newUnit = this.createUnit(newUnitInput);
             this.updateUnits(newUnit, element);
             populateUnitsDropdown();
           }
         };
-
-        // this._dropdownContainer.confirm = (event) => {
-        //   const newUnitInput = this._unitsDropdown.getInputValue().trim();
-
-        //   if (
-        //     newUnitInput !== "" &&
-        //     !this._resourceModeler._units?.find(
-        //       (unit) => unit.name === newUnitInput
-        //     )
-        //   ) {
-        //     let newUnit = this.createUnit(newUnitInput);
-        //     this.updateUnits(newUnit, element);
-        //     populateUnitsDropdown();
-        //   }
-        // };
 
         let shouldBlockNextClick = e.type === "create.end";
         this._dropdownContainer.handleClick = (event) => {
@@ -224,6 +118,7 @@ export default class TaskLabelHandler extends CommandInterceptor {
             return false;
           } else if (event.target.classList.contains("dd-dropdown-entry")) {
             this._rolesDropdown.clearInput();
+            this._unitsDropdown.clearInput();
           } else if (event.target.tagName !== "INPUT" || !event.target.value) {
             this._dropdownContainer.confirm();
           }
@@ -265,16 +160,14 @@ export default class TaskLabelHandler extends CommandInterceptor {
       }
 
       if (is(element, "bpmn:Lane")) {
-        const resource = element.businessObject;
+        const activity = element.businessObject;
         this._dropdownContainer.currentElement = element;
 
         const updateRolesSelection = () => {
           this._rolesDropdown
             .getEntries()
             .forEach((entry) =>
-              entry.setSelected(
-                resource.roles?.find((role) => role === entry.option)
-              )
+              entry.setSelected(activity.roles === entry.option)
             );
         };
 
@@ -282,109 +175,42 @@ export default class TaskLabelHandler extends CommandInterceptor {
           this._unitsDropdown
             .getEntries()
             .forEach((entry) =>
-              entry.setSelected(
-                resource.units?.find((unit) => unit === entry.option)
-              )
+              entry.setSelected(activity.units === entry.option)
             );
         };
 
-        const populateDropdown = (
-          dropdown,
-          items,
-          updateFunction,
-          updateSelectionFunction
-        ) => {
-          const newestItem = items.length > 0 ? items[items.length - 1] : null;
-
-          dropdown.populate(
-            items,
-            (item, element) => {
-              updateFunction(item, element);
-              updateSelectionFunction();
+        const populateRolesDropdown = () => {
+          this._rolesDropdown.populate(
+            this._fragmentModeler._roles || [],
+            (roles, element) => {
+              this.updateRoles(roles, element);
+              if (element.businessObject.roles === undefined) {
+              }
+              updateRolesSelection();
             },
             element
           );
-
-          dropdown.getEntries().forEach((entry) => {
-            entry.addEventListener("click", (event) => {
-              const selectedItem = entry.option;
-
-              // Clear selection for all entries in both dropdowns
-              this._rolesDropdown.getEntries().forEach((roleEntry) => {
-                roleEntry.setSelected(false);
-              });
-
-              this._unitsDropdown.getEntries().forEach((unitEntry) => {
-                unitEntry.setSelected(false);
-              });
-
-              // Update the function for the clicked dropdown
-              if (dropdown === this._rolesDropdown) {
-                this.updateRoles(selectedItem, element);
-                updateRolesSelection();
-                // Clear selection in Units dropdown
-                this._unitsDropdown.getEntries().forEach((unitEntry) => {
-                  unitEntry.setSelected(false);
-                });
-                // Set selected for the clicked entry in Units dropdown
-                entry.setSelected(true);
-              } else if (dropdown === this._unitsDropdown) {
-                this.updateUnits(selectedItem, element);
-                updateUnitsSelection();
-                // Clear selection in Roles dropdown
-                this._rolesDropdown.getEntries().forEach((roleEntry) => {
-                  roleEntry.setSelected(false);
-                });
-
-                // Set selected for the clicked entry in Units dropdown
-                entry.setSelected(true);
-              }
-
-              this._dropdownContainer.confirm();
-            });
-          });
-
-          dropdown.addCreateElementInput((event) =>
+          this._rolesDropdown.addCreateElementInput((event) =>
             this._dropdownContainer.confirm()
           );
-
-          // Set selected state for the newest item
-          const newestEntry = dropdown
-            .getEntries()
-            .find((entry) => entry.option === newestItem);
-          if (newestEntry) {
-            newestEntry.setSelected(true);
-          }
-
-          updateSelectionFunction();
-        };
-
-        const populateRolesDropdown = () => {
-          const roles = this._resourceModeler._roles || [];
-          populateDropdown(
-            this._rolesDropdown,
-            roles,
-            (role, element) => {
-              this.updateRoles(role, element);
-            },
-            () => {
-              updateRolesSelection();
-            }
-          );
+          updateRolesSelection();
         };
 
         const populateUnitsDropdown = () => {
-          const units = this._resourceModeler._units || [];
-          populateDropdown(
-            this._unitsDropdown,
-            units,
-            (unit, element) => {
-              this.updateUnits(unit, element);
-            },
-            () => {
+          this._unitsDropdown.populate(
+            this._fragmentModeler._units || [],
+            (units, element) => {
+              this.updateUnits(units, element);
+              if (element.businessObject.units === undefined) {
+              }
               updateUnitsSelection();
-            }
+            },
+            element
           );
+          this._unitsDropdown.addCreateElementInput((event) =>
+            this._dropdownContainer.confirm()
+          );
+          updateUnitsSelection();
         };
 
         populateRolesDropdown();
@@ -392,46 +218,20 @@ export default class TaskLabelHandler extends CommandInterceptor {
 
         this._dropdownContainer.confirm = (event) => {
           const newRoleInput = this._rolesDropdown.getInputValue().trim();
+          const newUnitInput = this._unitsDropdown.getInputValue().trim();
 
-          if (
-            newRoleInput !== "" &&
-            !this._resourceModeler._roles?.find(
-              (role) => role.name === newRoleInput
-            )
-          ) {
+          if (newRoleInput !== "" && newRoleInput !== activity.roles) {
             let newRole = this.createRole(newRoleInput);
             this.updateRoles(newRole, element);
             populateRolesDropdown();
           }
 
-          const newUnitInput = this._unitsDropdown.getInputValue().trim();
-
-          if (
-            newUnitInput !== "" &&
-            !this._resourceModeler._units?.find(
-              (unit) => unit.name === newUnitInput
-            )
-          ) {
+          if (newUnitInput !== "" && newUnitInput !== activity.units) {
             let newUnit = this.createUnit(newUnitInput);
             this.updateUnits(newUnit, element);
             populateUnitsDropdown();
           }
         };
-
-        // this._dropdownContainer.confirm = (event) => {
-        //   const newUnitInput = this._unitsDropdown.getInputValue().trim();
-
-        //   if (
-        //     newUnitInput !== "" &&
-        //     !this._resourceModeler._units?.find(
-        //       (unit) => unit.name === newUnitInput
-        //     )
-        //   ) {
-        //     let newUnit = this.createUnit(newUnitInput);
-        //     this.updateUnits(newUnit, element);
-        //     populateUnitsDropdown();
-        //   }
-        // };
 
         let shouldBlockNextClick = e.type === "create.end";
         this._dropdownContainer.handleClick = (event) => {
@@ -442,6 +242,7 @@ export default class TaskLabelHandler extends CommandInterceptor {
             return false;
           } else if (event.target.classList.contains("dd-dropdown-entry")) {
             this._rolesDropdown.clearInput();
+            this._unitsDropdown.clearInput();
           } else if (event.target.tagName !== "INPUT" || !event.target.value) {
             this._dropdownContainer.confirm();
           }
@@ -491,15 +292,11 @@ export default class TaskLabelHandler extends CommandInterceptor {
   }
 
   updateRoles(newRole, element) {
-    if (element.businessObject.roles?.find((role) => role === newRole)) {
-      element.businessObject.roles = without(
-        element.businessObject.roles,
-        newRole
-      );
-    } else if (element.businessObject.roles) {
-      element.businessObject.roles.push(newRole);
+    const fmObject = element.businessObject;
+    if (fmObject.roles === newRole) {
+      fmObject.roles = undefined;
     } else {
-      element.businessObject.roles = [newRole];
+      fmObject.roles = newRole;
     }
     this._eventBus.fire("element.changed", {
       element,
@@ -513,15 +310,11 @@ export default class TaskLabelHandler extends CommandInterceptor {
   }
 
   updateUnits(newUnit, element) {
-    if (element.businessObject.units?.find((unit) => unit === newUnit)) {
-      element.businessObject.units = without(
-        element.businessObject.units,
-        newUnit
-      );
-    } else if (element.businessObject.units) {
-      element.businessObject.units.push(newUnit);
+    const fmObject = element.businessObject;
+    if (fmObject.units === newUnit) {
+      fmObject.units = undefined;
     } else {
-      element.businessObject.units = [newUnit];
+      fmObject.units = newUnit;
     }
     this._eventBus.fire("element.changed", {
       element,

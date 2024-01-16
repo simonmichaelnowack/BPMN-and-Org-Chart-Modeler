@@ -76,7 +76,9 @@ export default class ResourceLabelHandler extends CommandInterceptor {
             },
             element
           );
-          // this._rolesDropdown.addCreateElementInput(event => this._dropdownContainer.confirm());
+          this._rolesDropdown.addCreateElementInput((event) =>
+            this._dropdownContainer.confirm()
+          );
           updateRolesSelection();
         };
 

@@ -8,12 +8,16 @@ import { without } from "min-dash";
 import taskLabelHandling from "./taskLabelHandling";
 import activityLabelHandling from "./activityLabelHandling";
 import taskRenderer from "./draw";
+import poolRenderer from "./renderPool";
+import laneRenderer from "./renderLane";
 
 export default function FragmentModeler(options) {
   const customModules = [
     fragmentPaletteModule,
     customModelingModule,
     taskRenderer,
+    poolRenderer,
+    laneRenderer,
     taskLabelHandling,
     activityLabelHandling,
     {

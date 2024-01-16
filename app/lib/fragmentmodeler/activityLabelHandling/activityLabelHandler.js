@@ -73,9 +73,9 @@ export default class ActivityLabelHandler extends CommandInterceptor {
             },
             element
           );
-          //   this._roleDropdown.addCreateElementInput((event) =>
-          //     this._dropdownContainer.confirm()
-          //   );
+          this._roleDropdown.addCreateElementInput((event) =>
+            this._dropdownContainer.confirm()
+          );
           updateRoleSelection();
         };
         const populateNoPDropdown = () => {
