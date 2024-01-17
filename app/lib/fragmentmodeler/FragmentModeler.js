@@ -5,7 +5,7 @@ import customModelingModule from "./modeling";
 import bpmnExtension from "./moddle/bpmnextension.json";
 import { is } from "bpmn-js/lib/util/ModelUtil";
 import { without } from "min-dash";
-import taskLabelHandling from "./taskLabelHandling";
+import laneLabelHandling from "./laneLabelHandling";
 import activityLabelHandling from "./activityLabelHandling";
 import taskRenderer from "./draw";
 import poolRenderer from "./renderPool";
@@ -18,7 +18,7 @@ export default function FragmentModeler(options) {
     taskRenderer,
     poolRenderer,
     laneRenderer,
-    taskLabelHandling,
+    laneLabelHandling,
     activityLabelHandling,
     {
       fragmentModeler: ["value", this],
