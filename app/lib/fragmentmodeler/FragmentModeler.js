@@ -58,9 +58,9 @@ FragmentModeler.prototype.rank = 1;
 
 FragmentModeler.prototype.name = function (constructionMode) {
   if (constructionMode) {
-    return "Fragments";
+    return "BPMN Modeler";
   } else {
-    return "Fragments";
+    return "BPMN Modeler";
   }
 };
 
