@@ -18,6 +18,7 @@ export default function ODOrderingProvider(eventBus, canvas, translate) {
   var orders = [
     { type: "rom:Position", order: { level: 5 } },
     { type: "rom:OrganizationalUnit", order: { level: 5 } },
+    { type: "rom:OrgResource", order: { level: 5 } },
     { type: "rom:Link", order: { level: 3 } },
   ];
 

@@ -95,7 +95,14 @@ export default function LabelEditingProvider(
   });
 
   function activateDirectEdit(element, force) {
-    if (force || isAny(element, ["rom:Position", "rom:OrganizationalUnit"])) {
+    if (
+      force ||
+      isAny(element, [
+        "rom:Position",
+        "rom:OrganizationalUnit",
+        "rom:OrgResource",
+      ])
+    ) {
     }
   }
 
@@ -190,7 +197,13 @@ export default function LabelEditingProvider(
       fontWeight: this._textRenderer.getDefaultStyle().fontWeight,
     };
 
-    if (isAny(element, ["rom:Position", "rom:OrganizationalUnit"])) {
+    if (
+      isAny(element, [
+        "rom:Position",
+        "rom:OrganizationalUnit",
+        "rom:OrgResource",
+      ])
+    ) {
       assign(bounds, {
         width: bbox.width,
         y: bbox.y,

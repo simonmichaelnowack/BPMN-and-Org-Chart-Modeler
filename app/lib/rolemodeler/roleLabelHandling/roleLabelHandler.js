@@ -10,12 +10,21 @@ export default class RoleLabelHandler extends CommandInterceptor {
     this._modeling = modeling;
     this._dropdownContainer = document.createElement("div");
     this._dropdownContainer2 = document.createElement("div");
+    this._dropdownContainer3 = document.createElement("div");
+
     this._dropdownContainer.classList.add("dd-dropdown-multicontainer");
     this._dropdownContainer2.classList.add("dd-dropdown-multicontainer");
+    this._dropdownContainer3.classList.add("dd-dropdown-multicontainer");
+
     this._roleDropdown = getDropdown("Role/Position");
     this._dropdownContainer.appendChild(this._roleDropdown);
+
     this._unitDropdown = getDropdown("Organizational Unit");
     this._dropdownContainer2.appendChild(this._unitDropdown);
+
+    this._orgResourceDropdown = getDropdown("Resource");
+    this._dropdownContainer3.appendChild(this._orgResourceDropdown);
+
     this._currentDropdownTarget = undefined;
     this._overlayId = undefined;
     this._overlays = overlays;
@@ -193,6 +202,88 @@ export default class RoleLabelHandler extends CommandInterceptor {
 
         this._currentDropdownTarget = element.businessObject;
       }
+      if (is(element, "rom:OrgResource")) {
+        const resource = element.businessObject;
+        this._dropdownContainer3.currentElement = element;
+
+        const updateRolesSelection = () => {
+          this._orgResourceDropdown
+            .getEntries()
+            .forEach((entry) =>
+              entry.setSelected(
+                resource.roles?.find((role) => role === entry.option)
+              )
+            );
+        };
+
+        const populateUnitDropdown = () => {
+          this._orgResourceDropdown.populate([], () => {}, element);
+          this._orgResourceDropdown.addCreateElementInput(
+            (event) => this._dropdownContainer3.confirm(),
+            "text",
+            resource.name
+          );
+        };
+
+        populateUnitDropdown();
+
+        this._dropdownContainer3.confirm = (event) => {
+          const newNameInput = this._orgResourceDropdown.getInputValue().trim();
+
+          if (newNameInput !== "" && newNameInput !== resource.name) {
+            this.updateName(newNameInput, element);
+            populateUnitDropdown();
+          }
+        };
+
+        let shouldBlockNextClick = e.type === "create.end";
+        this._dropdownContainer3.handleClick = (event) => {
+          if (shouldBlockNextClick) {
+            shouldBlockNextClick = false;
+            return true;
+          } else if (!this._dropdownContainer3.contains(event.target)) {
+            return false;
+          } else if (event.target.classList.contains("dd-dropdown-entry")) {
+            this._unitDropdown.clearInput();
+          } else if (event.target.tagName !== "INPUT" || !event.target.value) {
+            this._dropdownContainer3.confirm();
+          }
+          return true;
+        };
+
+        this._dropdownContainer3.close = () => {
+          if (this._overlayId) {
+            this._overlays.remove(this._overlayId);
+            this._overlayId = undefined;
+          }
+          this._dropdownContainer3.currentElement = undefined;
+          this._currentDropdownTarget = undefined;
+        };
+
+        const closeOverlay = appendOverlayListeners(this._dropdownContainer3);
+        eventBus.once("element.contextmenu", (event) => {
+          if (
+            this._currentDropdownTarget &&
+            (event.element || event.shape).businessObject !==
+              this._currentDropdownTarget
+          ) {
+            closeOverlay(event);
+            event.preventDefault();
+          }
+        });
+
+        // Show the menu(e)
+        this._overlayId = overlays.add(element.id, "classSelection", {
+          position: {
+            bottom: 0,
+            right: 0,
+          },
+          scale: false,
+          html: this._dropdownContainer3,
+        });
+
+        this._currentDropdownTarget = element.businessObject;
+      }
     });
   }
 
@@ -202,46 +293,6 @@ export default class RoleLabelHandler extends CommandInterceptor {
       element,
     });
   }
-
-  // updateCapacity(newCapacity, element) {
-  //     element.businessObject.capacity = newCapacity;
-  //     this._eventBus.fire('element.changed', {
-  //         element
-  //     });
-  // }
-
-  // createRole(name) {
-  //     return this._eventBus.fire(CommonEvents.ROLE_CREATION_REQUESTED, {
-  //         name
-  //     });
-  // }
-
-  // updateRoles(newRole, element) {
-  //     if ((element.businessObject.roles?.find(role => role === newRole))) {
-  //         element.businessObject.roles = without(element.businessObject.roles, newRole);
-  //     } else if (element.businessObject.roles) {
-  //         element.businessObject.roles.push(newRole);
-  //     } else {
-  //         element.businessObject.roles = [newRole];
-  //     }
-  //     this._eventBus.fire('element.changed', {
-  //         element
-  //     });
-  // }
-
-  // updateavailabilityStart(newAvailabilityStart, element) {
-  //     element.businessObject.availabilityStart = newAvailabilityStart;
-  //     this._eventBus.fire('element.changed', {
-  //         element
-  //     });
-  // }
-
-  // updateavailabilityEnd(newAvailabilityEnd, element) {
-  //     element.businessObject.availabilityEnd = newAvailabilityEnd;
-  //     this._eventBus.fire('element.changed', {
-  //         element
-  //     });
-  // }
 }
 
 RoleLabelHandler.$inject = [

@@ -94,6 +94,41 @@
       ]
     },
     {
+      "name": "OrgResource",
+      "superClass": [
+        "BoardElement"
+      ],
+      "properties": [
+        {
+          "name": "links",
+          "isMany": true,
+          "type": "Link",
+          "isReference": true
+        },
+        {
+          "name": "capacity",
+          "isAttr": true,
+          "type": "Integer"
+        },
+        {
+          "name": "roles",
+          "isMany": true,
+          "type": "rom:Role",
+          "isReference": true
+        },
+        {
+          "name": "availabilityStart",
+          "isAttr": true,
+          "type": "Integer"
+        },
+        {
+          "name": "availabilityEnd",
+          "isAttr": true,
+          "type": "Integer"
+        }
+      ]
+    },
+    {
       "name": "Link",
       "superClass": ["BoardElement"],
       "properties": [
@@ -115,6 +150,12 @@
           "type": "OrganizationalUnit"
         },
         {
+          "name": "sourceOrgResourceRef",
+          "isAttr": true,
+          "isReference": true,
+          "type": "OrgResource"
+        },
+        {
           "name": "targetRef",
           "isAttr": true,
           "isReference": true,
@@ -125,6 +166,12 @@
           "isAttr": true,
           "isReference": true,
           "type": "OrganizationalUnit"
+        },
+        {
+          "name": "targetOrgResourceRef",
+          "isAttr": true,
+          "isReference": true,
+          "type": "OrgResource"
         }
       ]
     },

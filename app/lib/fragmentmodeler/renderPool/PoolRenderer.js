@@ -42,6 +42,9 @@ export default class PoolRenderer extends BaseRenderer {
     if (semantic.units) {
       displayedText = semantic.units.name;
     }
+    if (semantic.orgResources) {
+      displayedText = semantic.orgResources.name;
+    }
 
     return this.renderLabel(parentGfx, displayedText, {
       box: element,

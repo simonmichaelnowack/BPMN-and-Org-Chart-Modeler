@@ -176,3 +176,26 @@ RoleModeler.prototype.getUnits = function () {
     .filter((element) => is(element, "rom:OrganizationalUnit"))
     .map((element) => element.businessObject);
 };
+
+RoleModeler.prototype.createOrgResource = function (name) {
+  const modeling = this.get("modeling");
+  const canvas = this.get("canvas");
+  const diagramRoot = canvas.getRootElement();
+
+  const { x, y } = nextPosition(this, "rom:OrgResource");
+  const shape = modeling.createShape(
+    {
+      type: "rom:OrgResource",
+      name: name,
+    },
+    { x, y },
+    diagramRoot
+  );
+  return shape.businessObject;
+};
+
+RoleModeler.prototype.getOrgResources = function () {
+  return this.get("elementRegistry")
+    .filter((element) => is(element, "rom:OrgResource"))
+    .map((element) => element.businessObject);
+};

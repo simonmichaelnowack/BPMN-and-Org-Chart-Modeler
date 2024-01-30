@@ -122,6 +122,37 @@ export default function ROMRenderer(
     return rect;
   }
 
+  function drawPositionRect(parentGfx, width, height, r, offset, attrs) {
+    if (isObject(offset)) {
+      attrs = offset;
+      offset = 0;
+    }
+
+    offset = offset || 0;
+
+    attrs = computeStyle(attrs, {
+      stroke: "black",
+      strokeWidth: 2,
+      fill: "white",
+      strokeDasharray: "5,5",
+    });
+
+    var rect3 = svgCreate("rect");
+    svgAttr(rect3, {
+      x: offset,
+      y: offset,
+      width: width - offset * 2,
+      height: height - offset * 2,
+      rx: r,
+      ry: r,
+    });
+    svgAttr(rect3, attrs);
+
+    svgAppend(parentGfx, rect3);
+
+    return rect3;
+  }
+
   function drawPath(parentGfx, d, attrs) {
     attrs = computeStyle(attrs, ["no-fill"], {
       strokeWidth: 2,
@@ -359,6 +390,28 @@ export default function ROMRenderer(
   this.handlers = {
     "rom:Position": function (parentGfx, element, attrs) {
       var rect = drawRect(
+        parentGfx,
+        element.width,
+        element.height,
+        0,
+        assign(
+          {
+            fill: getFillColor(element, defaultFillColor),
+            fillOpacity: HIGH_FILL_OPACITY,
+            stroke: getStrokeColor(element, defaultStrokeColor),
+          },
+          attrs
+        )
+      );
+
+      // addDivider(parentGfx, element);
+      // renderAttributes(parentGfx, element);
+      renderTitelLabel(parentGfx, element);
+
+      return rect;
+    },
+    "rom:OrgResource": function (parentGfx, element, attrs) {
+      var rect = drawPositionRect(
         parentGfx,
         element.width,
         element.height,

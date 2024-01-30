@@ -174,7 +174,11 @@ function canStartConnection(element) {
     return null;
   }
 
-  return is(element, "rom:Position") && is(element, "rom:OrganizationalUnit");
+  return (
+    is(element, "rom:Position") &&
+    is(element, "rom:OrganizationalUnit") &&
+    is(element, "rom:OrgResource")
+  );
 }
 
 function nonExistingOrLabel(element) {
@@ -193,8 +197,12 @@ function canConnect(source, target) {
 
 function canConnectLink(source, target) {
   return (
-    (is(source, "rom:Position") || is(source, "rom:OrganizationalUnit")) &&
-    (is(target, "rom:Position") || is(target, "rom:OrganizationalUnit"))
+    (is(source, "rom:Position") ||
+      is(source, "rom:OrganizationalUnit") ||
+      is(source, "rom:OrgResource")) &&
+    (is(target, "rom:Position") ||
+      is(target, "rom:OrganizationalUnit") ||
+      is(target, "rom:OrgResource"))
   );
 }
 
@@ -275,7 +283,9 @@ function canCreate(shape, target, source, position) {
 }
 
 function canResize(shape, newBounds) {
-  if (isAny(shape, ["rom:Position", "rom:OrganizationalUnit"])) {
+  if (
+    isAny(shape, ["rom:Position", "rom:OrganizationalUnit", "rom:OrgResource"])
+  ) {
     return !newBounds || (newBounds.width >= 50 && newBounds.height >= 50);
   }
   return false;

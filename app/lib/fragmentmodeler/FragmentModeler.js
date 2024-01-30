@@ -119,6 +119,30 @@ FragmentModeler.prototype.handleUnitDeleted = function (unit) {
   });
 };
 
+FragmentModeler.prototype.handleOrgResourceListChanged = function (
+  orgResources,
+  dryRun = false
+) {
+  this._orgResources = orgResources;
+};
+
+FragmentModeler.prototype.handleOrgResourceRenamed = function (orgResource) {
+  this.getTasksWithOrgResource(orgResource).forEach((element) =>
+    this.get("eventBus").fire("element.changed", {
+      element,
+    })
+  );
+};
+
+FragmentModeler.prototype.handleOrgResourceDeleted = function (orgResource) {
+  this.getTasksWithOrgResource(orgResource).forEach((element, gfx) => {
+    element.businessObject.orgResource = undefined;
+    this.get("eventBus").fire("element.changed", {
+      element,
+    });
+  });
+};
+
 FragmentModeler.prototype.handleStateRenamed = function (olcState) {
   this.getDataObjectReferencesInState(olcState).forEach((element, gfx) =>
     this.get("eventBus").fire("element.changed", {
@@ -188,6 +212,16 @@ FragmentModeler.prototype.getTasksWithUnit = function (unit) {
       is(element, "bpmn:Task") &&
       unit.id &&
       element.businessObject.unit?.id === unit.id
+  );
+  return list;
+};
+
+FragmentModeler.prototype.getTasksWithOrgResource = function (orgResource) {
+  let list = this.get("elementRegistry").filter(
+    (element, gfx) =>
+      is(element, "bpmn:Task") &&
+      orgResource.id &&
+      element.businessObject.orgResource?.id === orgResource.id
   );
   return list;
 };

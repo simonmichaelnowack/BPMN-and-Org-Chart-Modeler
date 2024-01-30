@@ -23,7 +23,11 @@ ODFactory.prototype._ensureId = function (element) {
   // rom:Role -> Object_ID
   var prefix;
 
-  if (is(element, "rom:Position") || is(element, "rom:OrganizationalUnit")) {
+  if (
+    is(element, "rom:Position") ||
+    is(element, "rom:OrganizationalUnit") ||
+    is(element, "rom:OrgResource")
+  ) {
     prefix = "Object";
   } else {
     prefix = (element.$type || "").replace(/^[^:]*:/g, "");
@@ -38,7 +42,11 @@ ODFactory.prototype._ensureId = function (element) {
 
 ODFactory.prototype.create = function (type, attrs) {
   var element = this._model.create(type, attrs || {});
-  if (type === "rom:Position" || type === "rom:OrganizationalUnit") {
+  if (
+    type === "rom:Position" ||
+    type === "rom:OrganizationalUnit" ||
+    type === "rom:OrgResource"
+  ) {
     element.state = null;
   }
 

@@ -84,11 +84,13 @@ ContextPadProvider.prototype.getContextPadEntries = function (element) {
   createDeleteEntry(actions);
   if (
     element.type === "rom:Position" ||
-    element.type === "rom:OrganizationalUnit"
+    element.type === "rom:OrganizationalUnit" ||
+    element.type === "rom:OrgResource"
   ) {
     // Only add specific entries for these types
     createLinkNewPosition(actions);
     createLinkNewOrganizationalUnit(actions);
+    createLinkNewOrgResource(actions);
     createLinkObjectsEntry(actions);
   }
 
@@ -147,6 +149,16 @@ ContextPadProvider.prototype.getContextPadEntries = function (element) {
         "rom:Position",
         "bpmn-icon-task",
         translate("Link with new Position/Role")
+      ),
+    });
+  }
+
+  function createLinkNewOrgResource(actions) {
+    assign(actions, {
+      "append.append-orgResource": appendAction(
+        "rom:OrgResource",
+        "bpmn-icon-event-subprocess-expanded",
+        translate("Link with new Resource")
       ),
     });
   }

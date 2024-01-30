@@ -18,7 +18,11 @@ import {
  * @return {Point}
  */
 export function getNewShapePosition(source, element) {
-  if (is(element, "rom:Position") || is(element, "rom:OrganizationalUnit")) {
+  if (
+    is(element, "rom:Position") ||
+    is(element, "rom:OrganizationalUnit") ||
+    is(element, "rom:OrgResource")
+  ) {
     return getFlowNodePosition(source, element);
   }
 }

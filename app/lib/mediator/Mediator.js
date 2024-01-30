@@ -73,6 +73,10 @@ export default function Mediator() {
   this.on(CommonEvents.UNIT_CREATION_REQUESTED, (event) => {
     return this.unitCreationRequested(event.name);
   });
+
+  this.on(CommonEvents.ORGRESOURCE_CREATION_REQUESTED, (event) => {
+    return this.orgResourceCreationRequested(event.name);
+  });
 }
 
 Mediator.prototype.getHooks = function () {
@@ -280,6 +284,12 @@ Mediator.prototype.unitListChanged = function () {
   // this.resourceModelerHook.modeler.handleUnitListChanged(units);
 };
 
+Mediator.prototype.orgResourceListChanged = function () {
+  let orgResources = this.roleModelerHook.modeler.getOrgResources();
+  this.fragmentModelerHook.modeler.handleOrgResourceListChanged(orgResources);
+  // this.resourceModelerHook.modeler.handleUnitListChanged(units);
+};
+
 Mediator.prototype.roleCreationRequested = function (name) {
   const role = this.roleModelerHook.modeler.createRole(name);
   this.roleModelerHook.focusElement(role);
@@ -292,12 +302,22 @@ Mediator.prototype.unitCreationRequested = function (name) {
   return unit;
 };
 
+Mediator.prototype.orgResourceCreationRequested = function (name) {
+  const orgResource = this.roleModelerHook.modeler.createOrgResource(name);
+  this.roleModelerHook.focusElement(orgResource);
+  return orgResource;
+};
+
 Mediator.prototype.addedRole = function () {
   this.roleListChanged();
 };
 
 Mediator.prototype.addedUnit = function () {
   this.unitListChanged();
+};
+
+Mediator.prototype.addedOrgResource = function () {
+  this.orgResourceListChanged();
 };
 
 Mediator.prototype.confirmRoleDeletion = function (role) {
@@ -335,6 +355,25 @@ Mediator.prototype.deletedUnit = function (unit) {
 
 Mediator.prototype.renamedUnit = function (unit) {
   this.fragmentModelerHook.modeler.handleUnitRenamed(unit);
+  // this.resourceModelerHook.modeler.handleRoleRenamed(unit);
+};
+
+Mediator.prototype.confirmOrgResourceDeletion = function (orgResource) {
+  const affectedTasks =
+    this.fragmentModelerHook.modeler.getTasksWithOrgResource(orgResource);
+  // const affectedResources =
+  //   this.resourceModelerHook.modeler.getResourcesWithRole(unit);
+  return confirm("Deleting this Resource might affect your BPMN Model");
+};
+
+Mediator.prototype.deletedOrgResource = function (orgResource) {
+  this.fragmentModelerHook.modeler.handleOrgResourceDeleted(orgResource);
+  // this.resourceModelerHook.modeler.handleUnitDeleted(unit);
+  this.orgResourceListChanged();
+};
+
+Mediator.prototype.renamedOrgResource = function (orgResource) {
+  this.fragmentModelerHook.modeler.handleOrgResourceRenamed(orgResource);
   // this.resourceModelerHook.modeler.handleRoleRenamed(unit);
 };
 
@@ -898,6 +937,8 @@ Mediator.prototype.RoleModelerHook = function (eventBus, roleModeler) {
       this.mediator.addedRole(event.context.shape.businessObject);
     } else if (is(event.context.shape, ["rom:OrganizationalUnit"])) {
       this.mediator.addedUnit(event.context.shape.businessObject);
+    } else if (is(event.context.shape, ["rom:OrgResource"])) {
+      this.mediator.addedOrgResource(event.context.shape.businessObject);
     }
   });
 
@@ -905,6 +946,8 @@ Mediator.prototype.RoleModelerHook = function (eventBus, roleModeler) {
     if (is(event.context.shape, ["rom:Position"])) {
       // console.log(event);
     } else if (is(event.context.shape, ["rom:OrganizationalUnit"])) {
+      // Handle reverted event for organizational unit creation if needed
+    } else if (is(event.context.shape, ["rom:OrgResource"])) {
       // Handle reverted event for organizational unit creation if needed
     }
   });
@@ -914,6 +957,8 @@ Mediator.prototype.RoleModelerHook = function (eventBus, roleModeler) {
       this.mediator.deletedRole(event.context.shape.businessObject);
     } else if (is(event.context.shape, ["rom:OrganizationalUnit"])) {
       this.mediator.deletedUnit(event.context.shape.businessObject);
+    } else if (is(event.context.shape, ["rom:OrgResource"])) {
+      this.mediator.deletedOrgResource(event.context.shape.businessObject);
     }
   });
 
@@ -922,6 +967,8 @@ Mediator.prototype.RoleModelerHook = function (eventBus, roleModeler) {
       // console.log(event);
       //this.mediator.deletedState(event.context.shape.businessObject);
     } else if (is(event.context.shape, ["rom:OrganizationalUnit"])) {
+      // Handle reverted event for organizational unit deletion if needed
+    } else if (is(event.context.shape, ["rom:OrgResource"])) {
       // Handle reverted event for organizational unit deletion if needed
     }
   });
@@ -932,6 +979,8 @@ Mediator.prototype.RoleModelerHook = function (eventBus, roleModeler) {
         return this.mediator.confirmRoleDeletion(element.businessObject);
       } else if (is(element, ["rom:OrganizationalUnit"])) {
         return this.mediator.confirmUnitDeletion(element.businessObject);
+      } else if (is(element, ["rom:OrgResource"])) {
+        return this.mediator.confirmOrgResourceDeletion(element.businessObject);
       } else {
         return true;
       }
@@ -992,6 +1041,16 @@ Mediator.prototype.RoleModelerHook = function (eventBus, roleModeler) {
 
   eventBus.on("import.render.complete", (event) => {
     this.mediator.unitListChanged(this.modeler.getUnits());
+  });
+
+  this.executed(["element.updateLabel"], (event) => {
+    this.mediator.renamedOrgResource(event.context.element);
+  });
+
+  this.reverted(["element.updateLabel"], (event) => {});
+
+  eventBus.on("import.render.complete", (event) => {
+    this.mediator.orgResourceListChanged(this.modeler.getOrgResources());
   });
 };
 inherits(Mediator.prototype.RoleModelerHook, CommandInterceptor);

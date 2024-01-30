@@ -47,7 +47,13 @@ export default function ObjectConnectSnapping(eventBus) {
         context.connectionStart = mid(start);
 
         // snap hover
-        if (isAny(hover, ["rom:Position", "rom:OrganizationalUnit"])) {
+        if (
+          isAny(hover, [
+            "rom:Position",
+            "rom:OrganizationalUnit",
+            "rom:OrgResource",
+          ])
+        ) {
           snapToTargetMid(event, hover);
         }
       }

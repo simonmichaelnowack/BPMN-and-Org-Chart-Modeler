@@ -103,7 +103,11 @@ ElementFactory.prototype.createOdElement = function (elementType, attrs) {
 };
 
 ElementFactory.prototype._getDefaultSize = function (semantic) {
-  if (is(semantic, "rom:Position") || is(semantic, "rom:OrganizationalUnit")) {
+  if (
+    is(semantic, "rom:Position") ||
+    is(semantic, "rom:OrganizationalUnit") ||
+    is(semantic, "rom:OrgResource")
+  ) {
     return { width: 150, height: 90 };
   }
   return { width: 100, height: 80 };

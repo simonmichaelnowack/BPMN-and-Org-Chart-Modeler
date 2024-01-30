@@ -14,10 +14,12 @@ export default class LaneLabelHandler extends CommandInterceptor {
     this._dropdownContainer = document.createElement("div");
     this._dropdownContainer.classList.add("dd-dropdown-multicontainer");
 
-    this._rolesDropdown = getDropdown("Positions/Roles");
-    this._dropdownContainer.appendChild(this._rolesDropdown);
     this._unitsDropdown = getDropdown("Organizational Units");
     this._dropdownContainer.appendChild(this._unitsDropdown);
+    this._rolesDropdown = getDropdown("Positions/Roles");
+    this._dropdownContainer.appendChild(this._rolesDropdown);
+    this._orgResourcesDropdown = getDropdown("Resources");
+    this._dropdownContainer.appendChild(this._orgResourcesDropdown);
 
     this._currentDropdownTarget = undefined;
     this._overlayId = undefined;
@@ -55,6 +57,14 @@ export default class LaneLabelHandler extends CommandInterceptor {
             );
         };
 
+        const updateOrgResourcesSelection = () => {
+          this._orgResourcesDropdown
+            .getEntries()
+            .forEach((entry) =>
+              entry.setSelected(activity.orgResources === entry.option)
+            );
+        };
+
         const populateRolesDropdown = () => {
           this._rolesDropdown.populate(
             this._fragmentModeler._roles || [],
@@ -89,12 +99,33 @@ export default class LaneLabelHandler extends CommandInterceptor {
           updateUnitsSelection();
         };
 
+        const populateOrgResourcesDropdown = () => {
+          this._orgResourcesDropdown.populate(
+            this._fragmentModeler._orgResources || [],
+            (orgResources, element) => {
+              this.updateOrgResources(orgResources, element);
+              if (element.businessObject.orgResources === undefined) {
+              }
+              updateOrgResourcesSelection();
+            },
+            element
+          );
+          this._orgResourcesDropdown.addCreateElementInput((event) =>
+            this._dropdownContainer.confirm()
+          );
+          updateOrgResourcesSelection();
+        };
+
         populateRolesDropdown();
         populateUnitsDropdown();
+        populateOrgResourcesDropdown();
 
         this._dropdownContainer.confirm = (event) => {
           const newRoleInput = this._rolesDropdown.getInputValue().trim();
           const newUnitInput = this._unitsDropdown.getInputValue().trim();
+          const newOrgResourceInput = this._orgResourcesDropdown
+            .getInputValue()
+            .trim();
 
           if (newRoleInput !== "" && newRoleInput !== activity.roles) {
             let newRole = this.createRole(newRoleInput);
@@ -106,6 +137,15 @@ export default class LaneLabelHandler extends CommandInterceptor {
             let newUnit = this.createUnit(newUnitInput);
             this.updateUnits(newUnit, element);
             populateUnitsDropdown();
+          }
+
+          if (
+            newOrgResourceInput !== "" &&
+            newOrgResourceInput !== activity.orgResources
+          ) {
+            let newResource = this.createOrgResource(newOrgResourceInput);
+            this.updateOrgResources(newResource, element);
+            populateOrgResourcesDropdown();
           }
         };
 
@@ -119,6 +159,7 @@ export default class LaneLabelHandler extends CommandInterceptor {
           } else if (event.target.classList.contains("dd-dropdown-entry")) {
             this._rolesDropdown.clearInput();
             this._unitsDropdown.clearInput();
+            this._orgResourcesDropdown.clearInput();
           } else if (event.target.tagName !== "INPUT" || !event.target.value) {
             this._dropdownContainer.confirm();
           }
@@ -179,6 +220,14 @@ export default class LaneLabelHandler extends CommandInterceptor {
             );
         };
 
+        const updateOrgResourcesSelection = () => {
+          this._orgResourcesDropdown
+            .getEntries()
+            .forEach((entry) =>
+              entry.setSelected(activity.orgResources === entry.option)
+            );
+        };
+
         const populateRolesDropdown = () => {
           this._rolesDropdown.populate(
             this._fragmentModeler._roles || [],
@@ -213,12 +262,33 @@ export default class LaneLabelHandler extends CommandInterceptor {
           updateUnitsSelection();
         };
 
+        const populateOrgResourcesDropdown = () => {
+          this._orgResourcesDropdown.populate(
+            this._fragmentModeler._orgResources || [],
+            (orgResources, element) => {
+              this.updateOrgResources(orgResources, element);
+              if (element.businessObject.orgResources === undefined) {
+              }
+              updateOrgResourcesSelection();
+            },
+            element
+          );
+          this._orgResourcesDropdown.addCreateElementInput((event) =>
+            this._dropdownContainer.confirm()
+          );
+          updateOrgResourcesSelection();
+        };
+
         populateRolesDropdown();
         populateUnitsDropdown();
+        populateOrgResourcesDropdown();
 
         this._dropdownContainer.confirm = (event) => {
           const newRoleInput = this._rolesDropdown.getInputValue().trim();
           const newUnitInput = this._unitsDropdown.getInputValue().trim();
+          const newOrgResourceInput = this._orgResourcesDropdown
+            .getInputValue()
+            .trim();
 
           if (newRoleInput !== "" && newRoleInput !== activity.roles) {
             let newRole = this.createRole(newRoleInput);
@@ -230,6 +300,15 @@ export default class LaneLabelHandler extends CommandInterceptor {
             let newUnit = this.createUnit(newUnitInput);
             this.updateUnits(newUnit, element);
             populateUnitsDropdown();
+          }
+
+          if (
+            newOrgResourceInput !== "" &&
+            newOrgResourceInput !== activity.orgResources
+          ) {
+            let newResource = this.createOrgResource(newOrgResourceInput);
+            this.updateOrgResources(newResource, element);
+            populateOrgResourcesDropdown();
           }
         };
 
@@ -243,6 +322,7 @@ export default class LaneLabelHandler extends CommandInterceptor {
           } else if (event.target.classList.contains("dd-dropdown-entry")) {
             this._rolesDropdown.clearInput();
             this._unitsDropdown.clearInput();
+            this._orgResourcesDropdown.clearInput();
           } else if (event.target.tagName !== "INPUT" || !event.target.value) {
             this._dropdownContainer.confirm();
           }
@@ -315,6 +395,24 @@ export default class LaneLabelHandler extends CommandInterceptor {
       fmObject.units = undefined;
     } else {
       fmObject.units = newUnit;
+    }
+    this._eventBus.fire("element.changed", {
+      element,
+    });
+  }
+
+  createOrgResource(name) {
+    return this._eventBus.fire(CommonEvents.ORGRESOURCE_CREATION_REQUESTED, {
+      name,
+    });
+  }
+
+  updateOrgResources(newOrgResource, element) {
+    const fmObject = element.businessObject;
+    if (fmObject.orgResources === newOrgResource) {
+      fmObject.orgResources = undefined;
+    } else {
+      fmObject.orgResources = newOrgResource;
     }
     this._eventBus.fire("element.changed", {
       element,

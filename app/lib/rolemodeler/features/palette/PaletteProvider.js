@@ -111,6 +111,12 @@ PaletteProvider.prototype.getPaletteEntries = function (element) {
       "bpmn-icon-transaction",
       translate("Create Organizational Unit")
     ),
+    "create-org-resource-object": createAction(
+      "rom:OrgResource",
+      "od-elements",
+      "bpmn-icon-event-subprocess-expanded",
+      translate("Create Resource")
+    ),
     // 'object-linker': {
     //     group: 'od-elements',
     //     className: 'bpmn-icon-connection',
