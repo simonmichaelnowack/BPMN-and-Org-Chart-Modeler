@@ -114,7 +114,7 @@ PaletteProvider.prototype.getPaletteEntries = function (element) {
     "create-org-resource-object": createAction(
       "rom:OrgResource",
       "od-elements",
-      "bpmn-icon-event-subprocess-expanded",
+      "bpmn-icon-group",
       translate("Create Resource")
     ),
     // 'object-linker': {
