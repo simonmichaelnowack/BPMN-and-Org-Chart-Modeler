@@ -189,9 +189,19 @@ function canConnect(source, target) {
   if (nonExistingOrLabel(source) || nonExistingOrLabel(target)) {
     return null;
   }
+
   if (canConnectLink(source, target)) {
+    if (
+      (is(source, "rom:OrganizationalUnit") && is(target, "rom:OrgResource")) ||
+      (is(source, "rom:OrgResource") && is(target, "rom:OrganizationalUnit")) ||
+      (is(source, "rom:OrgResource") && is(target, "rom:OrgResource"))
+    ) {
+      return false;
+    }
+
     return { type: "rom:Link" };
   }
+
   return false;
 }
 

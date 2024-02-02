@@ -82,15 +82,21 @@ ContextPadProvider.prototype.getContextPadEntries = function (element) {
   }
 
   createDeleteEntry(actions);
-  if (
-    element.type === "rom:Position" ||
-    element.type === "rom:OrganizationalUnit" ||
-    element.type === "rom:OrgResource"
-  ) {
-    // Only add specific entries for these types
+  if (element.type === "rom:Position") {
     createLinkNewPosition(actions);
     createLinkNewOrganizationalUnit(actions);
     createLinkNewOrgResource(actions);
+    createLinkObjectsEntry(actions);
+  }
+  createDeleteEntry(actions);
+  if (element.type === "rom:OrganizationalUnit") {
+    createLinkNewPosition(actions);
+    createLinkNewOrganizationalUnit(actions);
+    createLinkObjectsEntry(actions);
+  }
+  createDeleteEntry(actions);
+  if (element.type === "rom:OrgResource") {
+    createLinkNewPosition(actions);
     createLinkObjectsEntry(actions);
   }
 
@@ -157,7 +163,7 @@ ContextPadProvider.prototype.getContextPadEntries = function (element) {
     assign(actions, {
       "append.append-orgResource": appendAction(
         "rom:OrgResource",
-        "bpmn-icon-event-subprocess-expanded",
+        "bpmn-icon-group",
         translate("Link with new Resource")
       ),
     });
