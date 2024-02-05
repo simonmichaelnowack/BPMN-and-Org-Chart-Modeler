@@ -46,6 +46,8 @@ export default class LaneRenderer extends BaseRenderer {
       displayedText = semantic.orgResources.name;
     }
 
+    element.businessObject.name = displayedText;
+
     return this.renderLabel(parentGfx, displayedText, {
       box: element,
       align: align,

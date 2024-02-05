@@ -70,6 +70,8 @@ export default class TaskRenderer extends BaseRenderer {
       displayedText = displayedText + semantic.name;
     }
 
+    element.businessObject.name = displayedText;
+
     return this.renderLabel(parentGfx, displayedText, {
       box: element,
       align: align,
