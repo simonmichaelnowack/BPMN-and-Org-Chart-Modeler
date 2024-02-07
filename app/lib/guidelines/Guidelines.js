@@ -829,7 +829,7 @@ export default [
     link: "https://github.com/Noel-Bastubbe/for-Construction-Modeling/wiki/Dependency-Model#dep4---mind-cyclic-dependencies",
   },
   {
-    title: "Check for unconnected Objects.",
+    title: "Check for Connectivity of Objects",
     id: "ORG1",
     getViolations(mediator) {
       const roleModeler = mediator.roleModelerHook.modeler;
@@ -843,39 +843,76 @@ export default [
             element.type === "rom:OrganizationalUnit"
         );
 
-      const unconnectedElements = elements.filter((element) => {
-        return element.incoming.length === 0 && element.outgoing.length === 0;
+      if (elements.length < 2) {
+        return [];
+      }
+
+      const adjacencyList = {}; 
+
+      elements.forEach((element) => {
+        adjacencyList[element.id] = [];
+        element.outgoing.forEach((connection) => {
+          adjacencyList[element.id].push(connection.target.id);
+        });
+        element.incoming.forEach((connection) => {
+          adjacencyList[element.id].push(connection.source.id);
+        });
       });
 
-      const violations = unconnectedElements.map((element) => ({
-        element: element,
-        message: "Please connect this Object to an other Object.",
-      }));
+      function bfs(startNode) {
+        const visited = {};
+        const queue = [startNode];
+        visited[startNode] = true;
+
+        while (queue.length > 0) {
+          const currentNode = queue.shift();
+          adjacencyList[currentNode].forEach((neighbor) => {
+            if (!visited[neighbor]) {
+              visited[neighbor] = true;
+              queue.push(neighbor);
+            }
+          });
+        }
+
+        return visited;
+      }
+
+      const violations = [];
+      const visitedNodes = bfs(elements[0].id); 
+
+      elements.forEach((element) => {
+        if (!visitedNodes[element.id]) {
+          violations.push({
+            element: element,
+            message: "Ensure that the Organizational Chart is connected.",
+          });
+        }
+      });
 
       return violations.length > 0 ? violations : [];
     },
     severity: SEVERITY.ERROR,
   },
 
-  //   {
-  //     title: "Provide label for Object",
-  //     id: "ORG2",
-  //     getViolations(mediator) {
-  //       const elements = mediator.roleModelerHook.modeler
-  //         .get("elementRegistry")
-  //         .filter(
-  //           (element) =>
-  //             is(element, "rom:Position") ||
-  //             is(element, "rom:OrgResource") ||
-  //             is(element, "rom:OrganizationalUnit")
-  //         );
-  //       return elements
-  //         .filter((element) => !element.businessObject.name)
-  //         .map((element) => ({
-  //           element: element.businessObject,
-  //           message: "Please provide a label for each Object.",
-  //         }));
-  //     },
-  //     severity: SEVERITY.ERROR,
-  //   },
+    // {
+    //   title: "Provide label for Object",
+    //   id: "ORG2",
+    //   getViolations(mediator) {
+    //     const elements = mediator.roleModelerHook.modeler
+    //       .get("elementRegistry")
+    //       .filter(
+    //         (element) =>
+    //           is(element, "rom:Position") ||
+    //           is(element, "rom:OrgResource") ||
+    //           is(element, "rom:OrganizationalUnit")
+    //       );
+    //     return elements
+    //       .filter((element) => !element.businessObject.name)
+    //       .map((element) => ({
+    //         element: element.businessObject,
+    //         message: "Provide a label for each Object.",
+    //       }));
+    //   },
+    //   severity: SEVERITY.ERROR,
+    // },
 ];
