@@ -24,24 +24,113 @@
       ]
     },
     {
-      "name": "Role",
+      "name": "Position",
       "superClass": [
         "BoardElement"
       ],
       "properties": [
         {
-          "name": "inheritance",
+          "name": "links",
           "isMany": true,
-          "type": "Inheritance",
+          "type": "Link",
           "isReference": true
+        },
+        {
+          "name": "capacity",
+          "isAttr": true,
+          "type": "Integer"
+        },
+        {
+          "name": "roles",
+          "isMany": true,
+          "type": "rom:Role",
+          "isReference": true
+        },
+        {
+          "name": "availabilityStart",
+          "isAttr": true,
+          "type": "Integer"
+        },
+        {
+          "name": "availabilityEnd",
+          "isAttr": true,
+          "type": "Integer"
         }
       ]
     },
     {
-      "name": "Inheritance",
+      "name": "OrganizationalUnit",
       "superClass": [
         "BoardElement"
       ],
+      "properties": [
+        {
+          "name": "links",
+          "isMany": true,
+          "type": "Link",
+          "isReference": true
+        },
+        {
+          "name": "capacity",
+          "isAttr": true,
+          "type": "Integer"
+        },
+        {
+          "name": "roles",
+          "isMany": true,
+          "type": "rom:Role",
+          "isReference": true
+        },
+        {
+          "name": "availabilityStart",
+          "isAttr": true,
+          "type": "Integer"
+        },
+        {
+          "name": "availabilityEnd",
+          "isAttr": true,
+          "type": "Integer"
+        }
+      ]
+    },
+    {
+      "name": "OrgResource",
+      "superClass": [
+        "BoardElement"
+      ],
+      "properties": [
+        {
+          "name": "links",
+          "isMany": true,
+          "type": "Link",
+          "isReference": true
+        },
+        {
+          "name": "capacity",
+          "isAttr": true,
+          "type": "Integer"
+        },
+        {
+          "name": "roles",
+          "isMany": true,
+          "type": "rom:Role",
+          "isReference": true
+        },
+        {
+          "name": "availabilityStart",
+          "isAttr": true,
+          "type": "Integer"
+        },
+        {
+          "name": "availabilityEnd",
+          "isAttr": true,
+          "type": "Integer"
+        }
+      ]
+    },
+    {
+      "name": "Link",
+      "superClass": ["BoardElement"],
       "properties": [
         {
           "name": "type",
@@ -52,13 +141,37 @@
           "name": "sourceRef",
           "isAttr": true,
           "isReference": true,
-          "type": "Object"
+          "type": "Resource"
+        },
+        {
+          "name": "sourceOrganizationalUnitRef",
+          "isAttr": true,
+          "isReference": true,
+          "type": "OrganizationalUnit"
+        },
+        {
+          "name": "sourceOrgResourceRef",
+          "isAttr": true,
+          "isReference": true,
+          "type": "OrgResource"
         },
         {
           "name": "targetRef",
           "isAttr": true,
           "isReference": true,
-          "type": "Object"
+          "type": "Resource"
+        },
+        {
+          "name": "targetOrganizationalUnitRef",
+          "isAttr": true,
+          "isReference": true,
+          "type": "OrganizationalUnit"
+        },
+        {
+          "name": "targetOrgResourceRef",
+          "isAttr": true,
+          "isReference": true,
+          "type": "OrgResource"
         }
       ]
     },

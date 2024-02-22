@@ -1,39 +1,39 @@
-import inherits from 'inherits';
+import inherits from "inherits";
 
-import BaseModeler from './BaseModeler';
+import BaseModeler from "./BaseModeler";
 
-import Viewer from './Viewer';
-import NavigatedViewer from './NavigatedViewer';
+import Viewer from "./Viewer";
+import NavigatedViewer from "./NavigatedViewer";
 
-import KeyboardMoveModule from 'diagram-js/lib/navigation/keyboard-move';
-import MoveCanvasModule from 'diagram-js/lib/navigation/movecanvas';
-import TouchModule from 'diagram-js/lib/navigation/touch';
-import ZoomScrollModule from 'diagram-js/lib/navigation/zoomscroll';
+import KeyboardMoveModule from "diagram-js/lib/navigation/keyboard-move";
+import MoveCanvasModule from "diagram-js/lib/navigation/movecanvas";
+import TouchModule from "diagram-js/lib/navigation/touch";
+import ZoomScrollModule from "diagram-js/lib/navigation/zoomscroll";
 
-import AlignElementsModule from 'diagram-js/lib/features/align-elements';
-import AutoScrollModule from 'diagram-js/lib/features/auto-scroll';
-import BendpointsModule from 'diagram-js/lib/features/bendpoints';
-import ConnectModule from 'diagram-js/lib/features/connect';
-import ConnectionPreviewModule from 'diagram-js/lib/features/connection-preview';
-import ContextPadModule from './features/context-pad';
-import CopyPasteModule from './features/copy-paste';
-import CreateModule from 'diagram-js/lib/features/create';
-import EditorActionsModule from './features/editor-actions';
-import GridSnappingModule from './features/grid-snapping';
-import KeyboardModule from './features/keyboard';
-import AutoplaceModule from './features/auto-place';
-import KeyboardMoveSelectionModule from 'diagram-js/lib/features/keyboard-move-selection';
-import LabelEditingModule from './features/label-editing';
-import ModelingModule from './features/modeling';
-import MoveModule from 'diagram-js/lib/features/move';
-import PaletteModule from './features/palette';
-import ResizeModule from 'diagram-js/lib/features/resize';
-import SnappingModule from './features/snapping';
-import {is} from "bpmn-js/lib/util/ModelUtil";
-import {nextPosition} from "../util/Util";
+import AlignElementsModule from "diagram-js/lib/features/align-elements";
+import AutoScrollModule from "diagram-js/lib/features/auto-scroll";
+import BendpointsModule from "diagram-js/lib/features/bendpoints";
+import ConnectModule from "diagram-js/lib/features/connect";
+import ConnectionPreviewModule from "diagram-js/lib/features/connection-preview";
+import ContextPadModule from "./features/context-pad";
+import CopyPasteModule from "./features/copy-paste";
+import CreateModule from "diagram-js/lib/features/create";
+import EditorActionsModule from "./features/editor-actions";
+import GridSnappingModule from "./features/grid-snapping";
+import KeyboardModule from "./features/keyboard";
+import AutoplaceModule from "./features/auto-place";
+import KeyboardMoveSelectionModule from "diagram-js/lib/features/keyboard-move-selection";
+import LabelEditingModule from "./features/label-editing";
+import ModelingModule from "./features/modeling";
+import MoveModule from "diagram-js/lib/features/move";
+import PaletteModule from "./features/palette";
+import ResizeModule from "diagram-js/lib/features/resize";
+import SnappingModule from "./features/snapping";
+import taskLabelHandling from "./roleLabelHandling";
+import { is } from "bpmn-js/lib/util/ModelUtil";
+import { nextPosition } from "../util/Util";
 
-var initialDiagram =
-    `<?xml version="1.0" encoding="UTF-8"?>
+var initialDiagram = `<?xml version="1.0" encoding="UTF-8"?>
 <rom:definitions xmlns:rom="http://tk/schema/od" xmlns:odDi="http://tk/schema/odDi">
     <rom:odBoard id="Board_debug" />
     <odDi:odRootBoard id="RootBoard_debug">
@@ -42,11 +42,10 @@ var initialDiagram =
 </rom:definitions>`;
 
 export default function RoleModeler(options) {
-    BaseModeler.call(this, options);
+  BaseModeler.call(this, options);
 }
 
 inherits(RoleModeler, BaseModeler);
-
 
 RoleModeler.Viewer = Viewer;
 RoleModeler.NavigatedViewer = NavigatedViewer;
@@ -74,43 +73,40 @@ RoleModeler.NavigatedViewer = NavigatedViewer;
  *
  */
 RoleModeler.prototype.createDiagram = function () {
-    return this.importXML(initialDiagram);
+  return this.importXML(initialDiagram);
 };
 
-
 RoleModeler.prototype._interactionModules = [
-
-    // non-modeling components
-    KeyboardMoveModule,
-    MoveCanvasModule,
-    TouchModule,
-    ZoomScrollModule
+  // non-modeling components
+  KeyboardMoveModule,
+  MoveCanvasModule,
+  TouchModule,
+  ZoomScrollModule,
 ];
 
 RoleModeler.prototype._modelingModules = [
-
-    // modeling components
-    AutoplaceModule,
-    AlignElementsModule,
-    AutoScrollModule,
-    BendpointsModule,
-    ConnectModule,
-    ConnectionPreviewModule,
-    ContextPadModule,
-    CopyPasteModule,
-    CreateModule,
-    EditorActionsModule,
-    GridSnappingModule,
-    KeyboardModule,
-    KeyboardMoveSelectionModule,
-    LabelEditingModule,
-    ModelingModule,
-    MoveModule,
-    PaletteModule,
-    ResizeModule,
-    SnappingModule,
+  // modeling components
+  AutoplaceModule,
+  AlignElementsModule,
+  AutoScrollModule,
+  BendpointsModule,
+  ConnectModule,
+  ConnectionPreviewModule,
+  ContextPadModule,
+  CopyPasteModule,
+  CreateModule,
+  EditorActionsModule,
+  GridSnappingModule,
+  KeyboardModule,
+  KeyboardMoveSelectionModule,
+  LabelEditingModule,
+  ModelingModule,
+  MoveModule,
+  PaletteModule,
+  ResizeModule,
+  SnappingModule,
+  taskLabelHandling,
 ];
-
 
 // modules the modeler is composed of
 //
@@ -119,35 +115,87 @@ RoleModeler.prototype._modelingModules = [
 // - modeling modules
 
 RoleModeler.prototype._modules = [].concat(
-    Viewer.prototype._modules,
-    RoleModeler.prototype._interactionModules,
-    RoleModeler.prototype._modelingModules
+  Viewer.prototype._modules,
+  RoleModeler.prototype._interactionModules,
+  RoleModeler.prototype._modelingModules
 );
 
 RoleModeler.prototype.id = "ROM";
 RoleModeler.prototype.rank = 5;
 
 RoleModeler.prototype.name = function (constructionMode) {
-    if (constructionMode) {
-        return "Role Model";
-    } else {
-        return "Role Model";
-    }
-}
+  if (constructionMode) {
+    return "Organizational Chart";
+  } else {
+    return "Organizational Chart";
+  }
+};
 
 RoleModeler.prototype.createRole = function (name) {
-    const modeling = this.get('modeling');
-    const canvas = this.get('canvas');
-    const diagramRoot = canvas.getRootElement();
+  const modeling = this.get("modeling");
+  const canvas = this.get("canvas");
+  const diagramRoot = canvas.getRootElement();
 
-    const {x, y} = nextPosition(this, 'rom:Role');
-    const shape = modeling.createShape({
-        type: 'rom:Role',
-        name: name
-    }, {x, y}, diagramRoot);
-    return shape.businessObject;
-}
+  const { x, y } = nextPosition(this, "rom:Position");
+  const shape = modeling.createShape(
+    {
+      type: "rom:Position",
+      name: name,
+    },
+    { x, y },
+    diagramRoot
+  );
+  return shape.businessObject;
+};
 
 RoleModeler.prototype.getRoles = function () {
-    return this.get('elementRegistry').filter(element => is(element, 'rom:Role')).map(element => element.businessObject);
-}
+  return this.get("elementRegistry")
+    .filter((element) => is(element, "rom:Position"))
+    .map((element) => element.businessObject);
+};
+
+RoleModeler.prototype.createUnit = function (name) {
+  const modeling = this.get("modeling");
+  const canvas = this.get("canvas");
+  const diagramRoot = canvas.getRootElement();
+
+  const { x, y } = nextPosition(this, "rom:OrganizationalUnit");
+  const shape = modeling.createShape(
+    {
+      type: "rom:OrganizationalUnit",
+      name: name,
+    },
+    { x, y },
+    diagramRoot
+  );
+  return shape.businessObject;
+};
+
+RoleModeler.prototype.getUnits = function () {
+  return this.get("elementRegistry")
+    .filter((element) => is(element, "rom:OrganizationalUnit"))
+    .map((element) => element.businessObject);
+};
+
+RoleModeler.prototype.createOrgResource = function (name) {
+  const modeling = this.get("modeling");
+  const canvas = this.get("canvas");
+  const diagramRoot = canvas.getRootElement();
+
+  const { x, y } = nextPosition(this, "rom:OrgResource");
+  const shape = modeling.createShape(
+    {
+      type: "rom:OrgResource",
+      name: name,
+    },
+    { x, y },
+    diagramRoot
+  );
+  return shape.businessObject;
+};
+
+RoleModeler.prototype.getOrgResources = function () {
+  return this.get("elementRegistry")
+    .filter((element) => is(element, "rom:OrgResource"))
+    .map((element) => element.businessObject);
+};
