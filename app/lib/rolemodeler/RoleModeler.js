@@ -125,9 +125,9 @@ RoleModeler.prototype.rank = 5;
 
 RoleModeler.prototype.name = function (constructionMode) {
   if (constructionMode) {
-    return "Organizational Chart";
+    return "Organizational Chart Modeler";
   } else {
-    return "Organizational Chart";
+    return "Organizational Chart Modeler";
   }
 };
 
