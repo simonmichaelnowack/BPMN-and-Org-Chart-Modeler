@@ -1,7 +1,7 @@
 # OverView
 *Modeling Tool for the combined modeling of BPMN models and Organizational Charts.*
 
-OverView is a modeling tool that allows the combined modeling of BPMN models and Organizational Charts. It supports users at design time by providing modeling guidelines that ensure correct and consistent models. The tool is inspired by /https://github.com/bptlab/fCM-design-support and forked from /https://github.com/Noel-Bastubbe/for-Construction-Modeling.
+OverView is a modeling tool that allows the combined modeling of BPMN models and Organizational Charts. It supports users at design time by providing modeling guidelines that ensure correct and consistent models. The tool is inspired by https://github.com/bptlab/fCM-design-support and forked from https://github.com/Noel-Bastubbe/for-Construction-Modeling.
 
 ## User Guide
 ### Installation
